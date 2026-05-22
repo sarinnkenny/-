@@ -1,35 +1,42 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PowderPink - เว็บสะสมแต้มสุดน่ารัก</title>
+    <title>Yukishiro - ระบบสะสมแต้มพาสเทลสีฟ้าละมุน</title>
+    
+    <!-- Google Fonts: Comfortaa (ฟอนต์อังกฤษบางกลมมน) และ Mitr (ฟอนต์ไทยบางพรีเมียมอ่านง่าย) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500&family=Mitr:wght@200;300;400&display=swap" rel="stylesheet">
     
     <style>
-        /* --- CSS VARIABLES (โทนสีพาสเทลตามรูปภาพ) --- */
+        /* --- CSS VARIABLES (โทนสีฟ้าพาสเทลหิมะ Yukishiro) --- */
         :root {
-            --bg-gradient: linear-gradient(180deg, #FFF0F5 0%, #FFE4E1 100%);
-            --primary-pink: #FFB6C1;
-            --dark-pink: #FF8DA1;
-            --soft-white: #FFFFFF;
-            --text-main: #6B4E54;
-            --text-muted: #A3858B;
-            --card-shadow: 0 8px 24px rgba(255, 182, 193, 0.2);
-            --border-radius: 24px;
+            --bg-gradient: linear-gradient(180deg, #E0F2FE 0%, #F0F9FF 100%);
+            --primary-blue: #93C5FD;
+            --dark-blue: #5B9FE3;
+            --bg-light-blue: #F0F7FF;
+            --soft-white: rgba(255, 255, 255, 0.85);
+            --text-main: #2E4057;
+            --text-muted: #64748B;
+            --card-shadow: 0 12px 30px rgba(147, 197, 253, 0.2);
+            --border-radius-lg: 28px;
+            --border-radius-md: 18px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* --- GLOBAL STYLES --- */
+        /* --- GLOBAL RESET --- */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Kanit', sans-serif;
+            font-family: 'Mitr', sans-serif;
             background: var(--bg-gradient);
             color: var(--text-main);
             min-height: 100vh;
@@ -37,283 +44,461 @@
             justify-content: center;
             align-items: flex-start;
             padding: 0;
+            overflow-x: hidden;
+            position: relative;
         }
 
-        /* จำลองหน้าจอให้อยู่ตรงกลางสไตล์ Mobile-First ใน Desktop */
-        .app-container {
+        /* --- BACKGROUND BUBBLE EFFECT (ฟองพาสเทลลอยละล่อง) --- */
+        .bubble-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bubble {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(147, 197, 253, 0.3) 100%);
+            border-radius: 50%;
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.8), 0 4px 10px rgba(147, 197, 253, 0.1);
+            animation: floatBubble infinite ease-in-out;
+        }
+
+        /* ฟองขนาดต่างๆ พร้อมสุ่มตำแหน่ง */
+        .bubble:nth-child(1) { width: 80px; height: 80px; left: 5%; bottom: -100px; animation-duration: 18s; animation-delay: 0s; }
+        .bubble:nth-child(2) { width: 120px; height: 120px; left: 80%; bottom: -120px; animation-duration: 22s; animation-delay: 2s; }
+        .bubble:nth-child(3) { width: 50px; height: 50px; left: 40%; bottom: -60px; animation-duration: 14s; animation-delay: 4s; }
+        .bubble:nth-child(4) { width: 90px; height: 90px; left: 75%; bottom: -100px; animation-duration: 25s; animation-delay: 1s; }
+        .bubble:nth-child(5) { width: 70px; height: 70px; left: 15%; bottom: -80px; animation-duration: 16s; animation-delay: 7s; }
+
+        @keyframes floatBubble {
+            0% {
+                transform: translateY(0) scale(1) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-110vh) scale(1.1) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* --- APP CONTAINER (MOBILE-FIRST) --- */
+        .app-viewport {
             width: 100%;
             max-width: 480px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             min-height: 100vh;
-            box-shadow: 0 0 40px rgba(255, 141, 161, 0.1);
-            padding: 20px 20px 100px 20px; /* เว้นด้านล่างสำหรับปุ่มติดหน้าจอ */
+            box-shadow: 0 0 50px rgba(147, 197, 253, 0.15);
+            padding: 20px 20px 120px 20px;
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
         }
 
-        /* หัวข้อเซกชันหลัก */
-        section-title {
-            font-family: 'Fredoka', 'Kanit', sans-serif;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--dark-pink);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* การตกแต่งการ์ดสไตล์พาสเทลโค้งมน */
-        .glass-card {
+        /* ดีไซน์การ์ดสไตล์ก้อนเมฆสุดโค้งมนนุ่มละมุน */
+        .blue-card {
             background: var(--soft-white);
-            border-radius: var(--border-radius);
-            padding: 20px;
+            border-radius: var(--border-radius-lg);
+            padding: 24px;
             box-shadow: var(--card-shadow);
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            transition: var(--transition);
+            position: relative;
+            z-index: 2;
         }
 
-        /* --- 1. HEADER SECTION --- */
+        /* ฟอนต์สไตล์เดียวกับในรูปแนบ (ผอม, บาง, และ Minimalist) */
+        .brand-font {
+            font-family: 'Comfortaa', sans-serif;
+            font-weight: 300; /* ให้เส้นอักษรดูผอมบาง */
+            letter-spacing: 1px;
+        }
+
+        /* --- BUTTONS & INPUTS --- */
+        .btn {
+            background: var(--dark-blue);
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: var(--border-radius-md);
+            font-family: 'Mitr', sans-serif;
+            font-weight: 300;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(91, 159, 227, 0.25);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(91, 159, 227, 0.35);
+            opacity: 0.95;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-blue);
+            color: var(--dark-blue);
+            box-shadow: none;
+        }
+
+        .btn-outline:hover {
+            background: rgba(147, 197, 253, 0.15);
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: #FF6B6B;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.25);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 6px 16px rgba(255, 107, 107, 0.35);
+        }
+
+        .btn-mini {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border-radius: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            font-weight: 300;
+            color: var(--text-muted);
+            padding-left: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], input[type="number"], input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--border-radius-md);
+            border: 2px solid rgba(147, 197, 253, 0.25);
+            font-family: 'Mitr', sans-serif;
+            font-weight: 200;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            background: var(--bg-light-blue);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus {
+            border-color: var(--primary-blue);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.12);
+        }
+
+        /* --- HEADER SECTION --- */
         .app-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 4px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .brand-logo {
-            width: 45px;
-            height: 45px;
-            background: var(--primary-pink);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-family: 'Fredoka', sans-serif;
-            font-size: 1.5rem;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(255, 182, 193, 0.4);
-        }
-
-        .brand-name {
-            font-family: 'Fredoka', 'Kanit', sans-serif;
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: var(--dark-pink);
-            letter-spacing: 0.5px;
-        }
-
-        .dev-badge {
-            background: rgba(255, 182, 193, 0.25);
-            color: var(--dark-pink);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            border: 1px solid rgba(255, 182, 193, 0.4);
-        }
-
-        /* --- 2. HERO SECTION (สะสมแต้ม) --- */
-        .hero-card {
-            background: linear-gradient(135deg, #FFF5F6 0%, #FFE4E8 100%);
-            text-align: center;
             position: relative;
-            overflow: hidden;
+            z-index: 2;
         }
 
-        /* ตกแต่งพื้นหลังสไตล์ก้อนเมฆอ้อมๆ */
-        .hero-card::before {
-            content: '';
-            position: absolute;
-            top: -50px;
-            right: -50px;
-            width: 120px;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-        }
-
-        .user-welcome {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-
-        .points-display {
-            font-family: 'Fredoka', sans-serif;
-            font-size: 3.5rem;
-            font-weight: 600;
-            color: var(--dark-pink);
-            line-height: 1;
-            margin: 10px 0;
-        }
-
-        .points-label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 18px;
-        }
-
-        .btn-primary {
-            display: inline-block;
-            width: 100%;
-            background: var(--dark-pink);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 16px;
-            font-family: 'Kanit', sans-serif;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 6px 16px rgba(255, 141, 161, 0.3);
-            text-decoration: none;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 141, 161, 0.4);
-        }
-
-        /* --- 3. PRODUCTS SECTION --- */
-        .product-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .product-item {
+        .logo-area {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 12px;
-            background: var(--soft-white);
-            border-radius: 18px;
-            border: 1px solid rgba(255, 182, 193, 0.2);
-        }
-
-        .product-img-placeholder {
-            width: 70px;
-            height: 70px;
-            background: #FFEbee;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-        }
-
-        .product-info {
-            flex: 1;
-        }
-
-        .product-title {
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: var(--text-main);
-            margin-bottom: 2px;
-        }
-
-        .product-points {
-            font-size: 0.85rem;
-            color: var(--dark-pink);
-            font-weight: 500;
-        }
-
-        .btn-exchange {
-            background: #FFF0F2;
-            color: var(--dark-pink);
-            border: 1px solid var(--primary-pink);
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        /* --- 4. REVIEWS SECTION --- */
-        .review-slider {
-            display: flex;
-            flex-direction: column;
             gap: 12px;
         }
 
-        .review-card {
-            background: rgba(255, 255, 255, 0.8);
-            border-left: 4px solid var(--primary-pink);
-            padding: 12px 16px;
-            border-radius: 0 var(--border-radius) var(--border-radius) 0;
-        }
-
-        .review-header {
+        .logo {
+            width: 44px;
+            height: 44px;
+            background: var(--primary-blue);
+            border-radius: var(--border-radius-md);
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 300;
+            box-shadow: 0 4px 12px rgba(147, 197, 253, 0.3);
         }
 
-        .reviewer-name {
-            font-weight: 500;
-            color: var(--text-main);
-        }
-
-        .review-stars {
-            color: #FFB300;
-        }
-
-        .review-text {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        /* --- 5. DEVELOPER SECTION --- */
-        .dev-section {
-            text-align: center;
-            margin-top: 10px;
-            border: 2px dashed rgba(255, 182, 193, 0.4);
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .dev-title {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+        .brand-name {
+            font-size: 1.5rem;
+            color: var(--dark-blue);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
+            font-weight: 300;
         }
 
-        .dev-name {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-main);
+        .mode-badge {
+            background: #F0F7FF;
+            color: var(--dark-blue);
+            border: 1px dashed var(--primary-blue);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 300;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .dev-credit {
+        .mode-badge:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        /* --- MEMBER TAB: LOGIN & POINT DISPLAY --- */
+        .search-container {
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 300;
+            margin-bottom: 16px;
+            color: var(--dark-blue);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .points-box {
+            background: linear-gradient(135deg, #F0F7FF 0%, #E0F2FE 100%);
+            border-radius: var(--border-radius-md);
+            padding: 22px;
+            text-align: center;
+            margin-top: 16px;
+            animation: bounceIn 0.5s ease;
+        }
+
+        .current-user-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 300;
+        }
+
+        .points-value {
+            font-size: 3.4rem;
+            font-weight: 300;
+            color: var(--dark-blue);
+            line-height: 1.1;
+        }
+
+        .points-unit {
             font-size: 0.8rem;
             color: var(--text-muted);
-            margin-top: 2px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
         }
 
-        /* --- 6. FLOATING CONTACT LINE BUTTON --- */
-        .line-contact-container {
+        /* --- PRODUCTS/DISCOUNT SECTION --- */
+        .items-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .reward-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px;
+            background: var(--bg-light-blue);
+            border-radius: var(--border-radius-md);
+            border: 1px solid rgba(147, 197, 253, 0.2);
+            transition: var(--transition);
+        }
+
+        .reward-item:hover {
+            transform: translateX(4px);
+        }
+
+        .reward-icon {
+            width: 54px;
+            height: 54px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            box-shadow: 0 4px 10px rgba(147, 197, 253, 0.1);
+        }
+
+        .reward-info {
+            flex: 1;
+        }
+
+        .reward-name {
+            font-size: 0.95rem;
+            font-weight: 300;
+            color: var(--text-main);
+        }
+
+        .reward-cost {
+            font-size: 0.8rem;
+            color: var(--dark-blue);
+            font-weight: 400;
+        }
+
+        /* --- ADMIN/DEVELOPER VIEW --- */
+        .admin-view {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px dashed rgba(147, 197, 253, 0.4);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            gap: 6px;
+            background: rgba(147, 197, 253, 0.12);
+            padding: 6px;
+            border-radius: var(--border-radius-md);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 4px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 300;
+            color: var(--text-muted);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--dark-blue);
+            box-shadow: 0 4px 10px rgba(147, 197, 253, 0.1);
+        }
+
+        /* ตารางจัดการข้อมูล */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .admin-table th {
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 2px solid var(--primary-blue);
+            color: var(--dark-blue);
+            font-weight: 300;
+            text-transform: uppercase;
+        }
+
+        .admin-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(147, 197, 253, 0.15);
+        }
+
+        .point-adjust {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-mini-control {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* --- NOTIFICATION TOAST --- */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #2E4057;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 300;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            z-index: 1100;
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* --- FLOATING LINE FOOTER --- */
+        .footer-fixed {
             position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 40px);
             max-width: 440px;
-            z-index: 100;
+            z-index: 99;
         }
 
         .btn-line {
@@ -321,127 +506,1054 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            background: #06C755; /* สีเขียว LINE แท้ */
+            background: #06C755;
             color: white;
             text-decoration: none;
-            padding: 14px;
+            padding: 12px;
             border-radius: 18px;
-            font-weight: 500;
-            font-size: 1rem;
-            box-shadow: 0 8px 20px rgba(6, 199, 85, 0.25);
-            transition: all 0.2s;
+            font-weight: 300;
+            font-size: 0.95rem;
+            box-shadow: 0 6px 20px rgba(6, 199, 85, 0.25);
+            transition: var(--transition);
         }
 
         .btn-line:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(6, 199, 85, 0.35);
+            box-shadow: 0 8px 24px rgba(6, 199, 85, 0.35);
         }
 
-        .line-icon {
-            font-weight: bold;
-            font-family: Arial, sans-serif;
+        .line-badge {
             background: white;
             color: #06C755;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* --- CUTE MODAL SYSTEM --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(46, 64, 87, 0.35);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 32px;
+            width: 100%;
+            max-width: 400px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(147, 197, 253, 0.25);
+            border: 3px solid var(--primary-blue);
+            transform: translateY(30px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        /* กล่องสลิปคูปองสำหรับแคปหน้าจอ */
+        .coupon-receipt {
+            background: radial-gradient(circle at 0% 50%, transparent 10px, #F0F7FF 10px),
+                        radial-gradient(circle at 100% 50%, transparent 10px, #F0F7FF 10px);
+            background-size: 100% 100%;
+            border: 2px dashed var(--primary-blue);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+            position: relative;
+        }
+
+        .coupon-header {
             font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(147, 197, 253, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .coupon-code {
+            font-family: 'Comfortaa', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: var(--dark-blue);
+            letter-spacing: 2px;
+            margin: 10px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid rgba(147, 197, 253, 0.2);
+            display: inline-block;
+            width: 100%;
+        }
+
+        .capture-badge {
+            display: inline-block;
+            background: #4FC3F7;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 300;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* --- CODE BADGE STYLE FOR LIST --- */
+        .code-badge {
+            background: #E0F2FE;
+            color: var(--dark-blue);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-family: 'Comfortaa', sans-serif;
+            font-weight: 400;
+            font-size: 0.8rem;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes bounceIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* ส่วนแบ่งประเภทหน้าควบคุมแอดมิน */
+        .admin-section-content {
+            display: none;
+        }
+        .admin-section-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
         }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
+    <!-- พื้นหลังฟองพาสเทลขยับได้ -->
+    <div class="bubble-container">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+    </div>
+
+    <div class="app-viewport">
         
+        <!-- HEADER (โลโก้ดีไซน์บาง + ชื่อร้าน Yukishiro) -->
         <header class="app-header">
-            <div class="brand">
-                <div class="brand-logo">P</div>
-                <div class="brand-name">PowderPink</div>
+            <div class="logo-area">
+                <div class="logo brand-font">Y</div>
+                <div class="brand-name brand-font">YUKISHIRO</div>
             </div>
-            <div class="dev-badge">สมาชิกสะสมแต้ม</div>
+            <!-- ปุ่มสวิตช์สลับโหมดผู้พัฒนา / ลูกค้า -->
+            <div class="mode-badge brand-font" id="mode-toggle-btn" onclick="requestAdminAccess()">
+                ADMIN
+            </div>
         </header>
 
-        <section class="glass-card hero-card">
-            <div class="user-welcome">ยินดีต้อนรับคุณ, ทาสการตลาดสุดน่ารัก 💕</div>
-            <div class="points-display">1,250</div>
-            <div class="points-label">คะแนนสะสมทั้งหมดของคุณ</div>
-            <a href="#exchange-section" class="btn-primary">ใช้คะแนนแลกของรางวัลคิวท์ๆ</a>
-        </section>
-
-        <section id="exchange-section" class="glass-card">
-            <div class="section-title">🎁 ของรางวัลสำหรับคุณ</div>
-            <div class="product-grid">
-                
-                <div class="product-item">
-                    <div class="product-img-placeholder">🌸</div>
-                    <div class="product-info">
-                        <div class="product-title">Griptok น้องก้อนเมฆพาสเทล</div>
-                        <div class="product-points">ใช้ 300 คะแนน</div>
-                    </div>
-                    <button class="btn-exchange">แลกเลย</button>
+        <!-- ================= ฝั่งลูกค้า (CLIENT VIEW) ================= -->
+        <div id="client-view" style="display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- ตรวจสอบรหัสสมาชิก -->
+            <section class="blue-card search-container">
+                <div class="card-title brand-font">🔍 CHECK POINTS</div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="search-member-id" placeholder="กรอกรหัสสมาชิกของคุณ (เช่น YS01)" style="flex: 1;">
+                    <button class="btn" onclick="checkMemberPoints()">ค้นหา</button>
                 </div>
 
-                <div class="product-item">
-                    <div class="product-img-placeholder">🎀</div>
-                    <div class="product-info">
-                        <div class="product-title">พวงกุญแจโบว์ชมพู PowderPink</div>
-                        <div class="product-points">ใช้ 500 คะแนน</div>
-                    </div>
-                    <button class="btn-exchange">แลกเลย</button>
+                <!-- ผลลัพธ์แสดงแต้มสมาชิกเมื่อถูกค้นพบ -->
+                <div id="points-display-area" class="points-box" style="display: none;">
+                    <div class="current-user-info" id="member-display-name">ยินดีต้อนรับคุณ คุณหวานพาสเทล</div>
+                    <div class="points-value brand-font" id="member-display-points">1,250</div>
+                    <div class="points-unit brand-font">POINTS</div>
                 </div>
+            </section>
 
-                <div class="product-item">
-                    <div class="product-img-placeholder">🥤</div>
-                    <div class="product-info">
-                        <div class="product-title">แก้วเก็บความเย็นสีชมพูนม</div>
-                        <div class="product-points">ใช้ 1,200 คะแนน</div>
-                    </div>
-                    <button class="btn-exchange">แลกเลย</button>
+            <!-- แสดงคูปองส่วนลด / สินค้าสำหรับแลกแต้ม -->
+            <section class="blue-card">
+                <div class="card-title brand-font">🎁 REWARDS & COUPONS</div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 300;">กรุณากรอกรหัสสมาชิกและค้นหาด้านบนก่อนทำรายการแลกสิทธิ์</p>
+                <div class="items-grid" id="rewards-client-list">
+                    <!-- จะเรนเดอร์ของรางวัลทั้งหมดผ่าน JS -->
                 </div>
+            </section>
 
+            <!-- รีวิวน่ารักๆ จากลูกค้า -->
+            <section class="blue-card">
+                <div class="card-title brand-font">what can I do</div>
+                <div class="items-grid" style="gap: 8px;">
+                    <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 16px; border-left: 4px solid var(--primary-blue); font-size: 0.85rem;">
+                        <strong>can ❄️</strong> ⭐⭐⭐⭐⭐
+                        <p style="color: var(--text-muted); margin-top: 4px; font-weight: 300;">เผลอแลกผิดแจ้งคืนแต้มได้ภายใน 10 นาที</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 16px; border-left: 4px solid var(--primary-blue); font-size: 0.85rem;">
+                        <strong>can not ☁️</strong> ⭐⭐⭐⭐⭐
+                        <p style="color: var(--text-muted); margin-top: 4px; font-weight: 300;">ลืมแคปรหัสของ หากจำรหัสไม่ได้ไม่สามารถแลกกับร้านได้</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= ฝั่งผู้พัฒนา (ADMIN/DEVELOPER VIEW) ================= -->
+        <div id="admin-view" class="admin-view">
+            
+            <div class="admin-header">
+                <div>
+                    <h3 class="brand-font" style="color: var(--dark-blue); font-size: 1.1rem; font-weight: 400;">🛠️ DEVELOPER CONTROL</h3>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 300;">จัดการสมาชิก คูปอง และตรวจสอบประวัติแลกรางวัล</p>
+                </div>
+                <button class="btn btn-outline btn-mini" style="width: auto; height: auto; padding: 6px 12px;" onclick="exitAdminMode()">ออก</button>
             </div>
-        </section>
 
-        <section class="glass-card">
-            <div class="section-title">💖 รีวิวจากลูกค้าคนดี</div>
-            <div class="review-slider">
-                
-                <div class="review-card">
-                    <div class="review-header">
-                        <span class="reviewer-name">คุณ มิลค์กี้ ✨</span>
-                        <span class="review-stars">⭐⭐⭐⭐⭐</span>
-                    </div>
-                    <div class="review-text">แอปสะสมแต้มน่ารักมากกก โทนสีชมพูดูแล้วสบายตาสุดๆ แลกของรางวัลไปสองรอบแล้ว ได้ไวมากค่ะ!</div>
-                </div>
-
-                <div class="review-card">
-                    <div class="review-header">
-                        <span class="reviewer-name">คุณ พาสเทลเลิฟเวอร์ 🦄</span>
-                        <span class="review-stars">⭐⭐⭐⭐⭐</span>
-                    </div>
-                    <div class="review-text">ดีไซน์โค้งมนละมุนหัวใจ ใช้งานง่ายบนมือถือ เช็คแต้มสะดวกมาก ชอบความก้อนเมฆนี้ที่สุด</div>
-                </div>
-
+            <!-- สวิตช์แท็บหลังบ้าน: สมาชิก, ของรางวัล, และประวัติการแลก -->
+            <div class="tab-btn-group">
+                <button class="tab-btn active" id="tab-members" onclick="switchAdminTab('members')">👥 สมาชิก</button>
+                <button class="tab-btn" id="tab-rewards" onclick="switchAdminTab('rewards')">🎁 รางวัล</button>
+                <button class="tab-btn" id="tab-history" onclick="switchAdminTab('history')">🎟️ ประวัติแลก</button>
             </div>
-        </section>
 
-        <section class="glass-card dev-section">
-            <div class="dev-title">⚙️ Developer Corner</div>
-            <div class="dev-name">Ayino Moto</div>
-            <div class="dev-credit">Crafted with 🤍 for PowderPink Studio</div>
-        </section>
+            <!-- หน้าแอดมินแท็บ 1: จัดการสมาชิก -->
+            <div id="admin-section-members" class="admin-section-content active">
+                
+                <!-- ฟอร์มสร้างรหัสสมาชิกใหม่ -->
+                <div class="blue-card" style="margin-bottom: 16px; border-style: dashed;">
+                    <div class="card-title brand-font" style="font-size: 1rem;">✨ CREATE MEMBER</div>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="new-member-id">รหัสสมาชิก</label>
+                            <input type="text" id="new-member-id" placeholder="เช่น YS04">
+                        </div>
+                        <div class="input-group">
+                            <label for="new-member-name">ชื่อสมาชิก</label>
+                            <input type="text" id="new-member-name" placeholder="เช่น คุณสุมิเระ">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="new-member-points">คะแนนเริ่มต้น</label>
+                        <input type="number" id="new-member-points" placeholder="เช่น 0" value="0">
+                    </div>
+                    <button class="btn" style="width: 100%;" onclick="createNewMember()">➕ เพิ่มสมาชิกเข้าระบบ</button>
+                </div>
 
-        <div class="line-contact-container">
+                <!-- ตารางแสดงสมาชิกทั้งหมด -->
+                <div class="blue-card" style="margin-bottom: 16px;">
+                    <div class="card-title brand-font" style="font-size: 1rem;">📊 MEMBERS LIST</div>
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>รหัส</th>
+                                    <th>ชื่อ</th>
+                                    <th>แต้ม</th>
+                                    <th style="text-align: center;">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="members-table-body">
+                                <!-- แถวรายชื่อสมาชิกเติมด้วย JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ตั้งค่าการเปลี่ยนรหัสผ่านโหมดแอดมิน -->
+                <div class="blue-card" style="border-style: dashed;">
+                    <div class="card-title brand-font" style="font-size: 1rem;">🔒 SECURITY SETTINGS</div>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="admin-pin-current">รหัสผ่านปัจจุบัน</label>
+                            <input type="password" id="admin-pin-current" placeholder="รหัสผ่านเดิม">
+                        </div>
+                        <div class="input-group">
+                            <label for="admin-pin-new">รหัสผ่านใหม่</label>
+                            <input type="password" id="admin-pin-new" placeholder="ระบุ PIN 4 หลัก">
+                        </div>
+                    </div>
+                    <button class="btn" style="width: 100%;" onclick="changeAdminPIN()">💾 บันทึกรหัสผ่านใหม่</button>
+                </div>
+            </div>
+
+            <!-- หน้าแอดมินแท็บ 2: จัดการของรางวัล / คูปองส่วนลด -->
+            <div id="admin-section-rewards" class="admin-section-content">
+                
+                <!-- ฟอร์มเพิ่ม/แก้ไขของรางวัล -->
+                <div class="blue-card" style="margin-bottom: 16px; border-style: dashed;">
+                    <div class="card-title brand-font" id="reward-form-title" style="font-size: 1rem;">➕ ADD NEW REWARD</div>
+                    <input type="hidden" id="edit-reward-index" value="">
+                    
+                    <div class="input-group">
+                        <label for="reward-name-input">ชื่อรางวัล/คูปองส่วนลด</label>
+                        <input type="text" id="reward-name-input" placeholder="เช่น คูปองส่วนลด 100 บาท">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="reward-points-input">แต้มที่ใช้แลก</label>
+                            <input type="number" id="reward-points-input" placeholder="เช่น 300">
+                        </div>
+                        <div class="input-group">
+                            <label for="reward-icon-input">ไอคอนอิโมจิ (Emoji)</label>
+                            <input type="text" id="reward-icon-input" placeholder="เช่น 🎟️, 🌸, 🎀">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" style="flex: 1;" onclick="saveReward()">💾 บันทึกข้อมูล</button>
+                        <button class="btn btn-outline" id="btn-cancel-reward-edit" style="display: none;" onclick="cancelRewardEdit()">ยกเลิก</button>
+                    </div>
+                </div>
+
+                <!-- รายการของรางวัลที่มีทั้งหมดด้านแอดมิน -->
+                <div class="blue-card">
+                    <div class="card-title brand-font" style="font-size: 1rem;">⚙️ MANAGE REWARDS</div>
+                    <div class="items-grid" id="rewards-admin-list">
+                        <!-- รายการของรางวัลพร้อมปุ่ม แก้ไข/ลบ -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- หน้าแอดมินแท็บ 3: ประวัติการแลก (REDEMPTION HISTORY LOG) -->
+            <div id="admin-section-history" class="admin-section-content">
+                <div class="blue-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <div class="card-title brand-font" style="margin-bottom: 0;">🎟️ REDEEMED COUPONS</div>
+                        <button class="btn btn-outline btn-mini" onclick="showClearHistoryConfirm()">ล้างประวัติ</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>รหัสส่วนลด</th>
+                                    <th>ผู้แลก</th>
+                                    <th>ของรางวัล</th>
+                                    <th>เวลาแลก</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- รายชื่อประวัติการสุ่มและแลกรางวัล -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FOOTER: ปุ่มติดต่อ LINE สุดพาสเทล -->
+        <div class="footer-fixed">
             <a href="https://line.me" target="_blank" class="btn-line">
-                <span class="line-icon">LINE</span>
-                สอบถามข้อมูลเพิ่มเติมผ่าน LINE
+                <span class="line-badge brand-font">LINE ID</span>
+                @yukishiro_studio (คลิกเพื่อติดต่อ)
             </a>
         </div>
 
     </div>
 
+    <!-- ================= MODALS (ป๊อปอัปน่ารักต่างๆ แทนการใช้ Browser Alert) ================= -->
+
+    <!-- 1. ป๊อปอัปสแกน/กรอกรหัสผ่านเพื่อเข้าโหมดแอดมิน -->
+    <div id="pin-access-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 360px;">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🔒</div>
+            <h3 class="brand-font" style="color: var(--dark-blue); font-size: 1.25rem; margin-bottom: 6px;">ENTER PIN CODE</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; font-weight: 300;">โปรดป้อนรหัสผ่านผู้พัฒนาเพื่อเข้าสู่หลังบ้าน</p>
+            
+            <div class="input-group" style="margin-bottom: 18px;">
+                <input type="password" id="admin-pin-input" placeholder="กรอกรหัสผ่าน (เริ่มต้น 1234)" style="text-align: center; font-size: 1.2rem; letter-spacing: 4px;" maxlength="10">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" style="flex: 1;" onclick="verifyAdminPIN()">เข้าสู่ระบบ</button>
+                <button class="btn btn-outline" style="flex: 1;" onclick="closePINAccessModal()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ป๊อปอัปแลกรางวัลสำเร็จ + สุ่มคูปองให้ลูกค้าแคปเจอร์หน้าจอ -->
+    <div id="redemption-success-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="capture-badge brand-font">📸 CAPTURE THIS SCREEN</div>
+            <h3 class="brand-font" style="color: var(--dark-blue); font-size: 1.3rem; margin-bottom: 6px; font-weight: 500;">REDEEM SUCCESSFUL 💙</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: 300;">นำภาพแคปเจอร์และรหัสสุ่มส่วนลดนี้ ไปแสดงต่อผู้พัฒนาเพื่อรับสิทธิ์ได้เลยค่ะ</p>
+            
+            <!-- สลิปคูปอง -->
+            <div class="coupon-receipt">
+                <div class="coupon-header brand-font">YUKISHIRO DISCOUNT COUPON</div>
+                <div style="font-size: 0.95rem; font-weight: 300; color: var(--text-main); margin-bottom: 4px;" id="modal-reward-name">พวงกุญแจโบว์ชมพู</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; font-weight: 300;">
+                    สมาชิก: <span id="modal-member-info" style="font-weight: 400;">YS01 - คุณเจนนี่</span>
+                </div>
+                
+                <!-- รหัสสุ่มที่แอดมินใช้ตรวจสอบ -->
+                <div class="coupon-code" id="modal-coupon-code">YS-X98FDA</div>
+                
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; font-weight: 300;" id="modal-timestamp">แลกเมื่อ: 22/05/2026 22:42</div>
+            </div>
+
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 18px; font-weight: 300;" id="modal-remaining-points">
+                คะแนนสะสมคงเหลือของคุณ: 950 แต้ม
+            </div>
+            
+            <button class="btn" style="width: 100%;" onclick="closeRedemptionModal()">ตกลงและปิดหน้าจอ</button>
+        </div>
+    </div>
+
+    <!-- 3. ป๊อปอัปแจ้งเตือนความผิดพลาด/ข้อมูลทั่วไป (Alert) -->
+    <div id="alert-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="font-size: 3rem; margin-bottom: 10px;" id="alert-icon">❄️</div>
+            <h3 class="brand-font" style="color: var(--dark-blue); font-size: 1.2rem; margin-bottom: 10px;" id="alert-title">ALERT</h3>
+            <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 20px; line-height: 1.4; font-weight: 300;" id="alert-message">ข้อความแจ้งเตือน</p>
+            <button class="btn" style="min-width: 120px;" onclick="closeAlertModal()">ตกลง</button>
+        </div>
+    </div>
+
+    <!-- 4. ป๊อปอัปการยืนยันดำเนินการลบต่างๆ (Confirm) -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="font-size: 3rem; margin-bottom: 10px;">❓</div>
+            <h3 class="brand-font" style="color: var(--dark-blue); font-size: 1.2rem; margin-bottom: 10px;">CONFIRMATION</h3>
+            <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 20px; line-height: 1.4; font-weight: 300;" id="confirm-message">คุณต้องการทำรายการนี้ใช่หรือไม่?</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn btn-danger" style="flex: 1;" id="confirm-yes-btn">ใช่, ดำเนินการ</button>
+                <button class="btn btn-outline" style="flex: 1;" onclick="closeConfirmModal()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- หน้าต่าง Toast แจ้งเตือนด่วนสั้นๆ -->
+    <div id="toast-notify" class="toast">แลกของรางวัลเรียบร้อยแล้วค่ะ 💙</div>
+
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // --- 1. INITIAL/MOCK DATA ---
+        // สมาชิกเริ่มต้นในระบบ (ปรับแต่งเป็นรหัสธีม Yukishiro 'YS')
+        const defaultMembers = [
+            { id: "YS01", name: "คุณสโนว์บลูเบอร์รี่", points: 1250 },
+            { id: "YS02", name: "คุณเมฆาครามพาสเทล", points: 450 },
+            { id: "YS03", name: "คุณยูกิฮานะ", points: 80 }
+        ];
+
+        // ของรางวัล/ส่วนลดเริ่มต้น
+        const defaultRewards = [
+            { id: 1, name: "Griptok ก้อนเมฆนุ่มฟูสีคราม", points: 300, icon: "☁️" },
+            { id: 2, name: "พวงกุญแจเกล็ดหิมะ Yukishiro", points: 500, icon: "❄️" },
+            { id: 3, name: "คูปองส่วนลดเครื่องดื่มหน้าเคาน์เตอร์ 50 บาท", points: 150, icon: "🎟️" },
+            { id: 4, name: "กระบอกน้ำเก็บความเย็นสีสกายพาสเทล", points: 1200, icon: "🥤" }
+        ];
+
+        // โหลดข้อมูลจาก LocalStorage หรือดึงข้อมูลเริ่มต้น
+        let members = JSON.parse(localStorage.getItem('ys_members')) || defaultMembers;
+        let rewards = JSON.parse(localStorage.getItem('ys_rewards')) || defaultRewards;
+        let redemptions = JSON.parse(localStorage.getItem('ys_redemptions')) || [];
+        
+        // รหัสผ่านแอดมินเริ่มต้นเป็น 1234
+        let adminPIN = localStorage.getItem('ys_admin_pin') || "1234";
+
+        // รหัสสมาชิกที่กำลังค้นหาข้อมูลอยู่ฝั่งลูกค้า
+        let activeMemberId = null;
+
+        // ตัวแปรเก็บฟังก์ชันการทำงานของปุ่ม Yes บนโมดอลยืนยัน
+        let confirmActionCallback = null;
+
+        // --- 2. LOCALSTORAGE SYNC ---
+        function saveData() {
+            localStorage.setItem('ys_members', JSON.stringify(members));
+            localStorage.setItem('ys_rewards', JSON.stringify(rewards));
+            localStorage.setItem('ys_redemptions', JSON.stringify(redemptions));
+            localStorage.setItem('ys_admin_pin', adminPIN);
+        }
+
+        // --- 3. TOAST & CUTE MODALS CONTROL ---
+        
+        // ฟังก์ชันเรียกใช้ Toast สั้นๆ
+        function showToast(message) {
+            const toast = document.getElementById('toast-notify');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // เปิดป๊อปอัปแจ้งเตือนแทน Alert
+        function showAlert(title, message, icon = "❄️") {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            document.getElementById('alert-icon').textContent = icon;
+            document.getElementById('alert-modal').classList.add('show');
+        }
+
+        // ปิดป๊อปอัปแจ้งเตือน
+        function closeAlertModal() {
+            document.getElementById('alert-modal').classList.remove('show');
+        }
+
+        // เปิดป๊อปอัปยืนยันแทน Confirm
+        function showConfirm(message, callback) {
+            document.getElementById('confirm-message').textContent = message;
+            confirmActionCallback = callback;
+            document.getElementById('confirm-modal').classList.add('show');
+        }
+
+        // ปิดป๊อปอัปยืนยัน
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.remove('show');
+            confirmActionCallback = null;
+        }
+
+        // ตัวเชื่อมฟังก์ชันตอบตกลงปุ่ม Yes ใน Modal ยืนยัน
+        document.getElementById('confirm-yes-btn').addEventListener('click', () => {
+            if (confirmActionCallback) {
+                confirmActionCallback();
+            }
+            closeConfirmModal();
+        });
+
+
+        // --- 4. REDEMPTION CODE GENERATOR (ระบบสุ่มรหัสส่วนลดธีม YS) ---
+        function generateRandomCouponCode() {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = 'YS-';
+            for (let i = 0; i < 6; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+
+        // --- 5. RENDER FUNCTIONS ---
+        
+        // แสดงรายการของรางวัลฝั่งลูกค้า
+        function renderRewardsClient() {
+            const listContainer = document.getElementById('rewards-client-list');
+            listContainer.innerHTML = '';
+
+            if (rewards.length === 0) {
+                listContainer.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 20px; font-weight:300;">ขณะนี้ยังไม่มีของรางวัลเปิดให้แลกค่ะ ☁️</p>`;
+                return;
+            }
+
+            rewards.forEach(item => {
+                listContainer.innerHTML += `
+                    <div class="reward-item">
+                        <div class="reward-icon">${item.icon || '🎁'}</div>
+                        <div class="reward-info">
+                            <div class="reward-name">${item.name}</div>
+                            <div class="reward-cost">ใช้ ${item.points} คะแนน</div>
+                        </div>
+                        <button class="btn btn-outline" style="padding: 8px 12px; font-size: 0.8rem; border-radius: 10px;" onclick="exchangeReward(${item.points}, '${item.name}')">แลก</button>
+                    </div>
+                `;
+            });
+        }
+
+        // แสดงตารางจัดการสมาชิกฝั่งแอดมิน
+        function renderMembersAdmin() {
+            const tbody = document.getElementById('members-table-body');
+            tbody.innerHTML = '';
+
+            members.forEach(m => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 400; color: var(--dark-blue); font-family: 'Comfortaa', sans-serif;">${m.id}</td>
+                        <td style="font-weight: 300;">${m.name}</td>
+                        <td><span style="font-weight: 400;">${m.points}</span> แต้ม</td>
+                        <td style="text-align: center;">
+                            <div class="point-adjust">
+                                <button class="btn btn-mini btn-mini-control" style="background:#81C784; box-shadow:none;" onclick="adjustPoints('${m.id}', 50)">+50</button>
+                                <button class="btn btn-mini btn-mini-control" style="background:#E57373; box-shadow:none;" onclick="adjustPoints('${m.id}', -50)">-50</button>
+                                <button class="btn btn-outline btn-mini btn-mini-control" style="border-color:#FF6B6B; color:#FF6B6B;" onclick="showDeleteMemberConfirm('${m.id}')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // แสดงรายการของรางวัลฝั่งแอดมิน
+        function renderRewardsAdmin() {
+            const listContainer = document.getElementById('rewards-admin-list');
+            listContainer.innerHTML = '';
+
+            if (rewards.length === 0) {
+                listContainer.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; font-weight:300;">ยังไม่มีรายการของรางวัล</p>`;
+                return;
+            }
+
+            rewards.forEach((item, index) => {
+                listContainer.innerHTML += `
+                    <div class="reward-item" style="justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="reward-icon" style="width: 44px; height: 44px; font-size: 1.2rem;">${item.icon || '🎁'}</div>
+                            <div>
+                                <div class="reward-name" style="font-size: 0.9rem;">${item.name}</div>
+                                <div class="reward-cost" style="font-size: 0.75rem;">${item.points} คะแนน</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="btn btn-mini" style="background:#64B5F6; box-shadow:none;" onclick="startEditReward(${index})">✏️</button>
+                            <button class="btn btn-mini btn-danger" style="box-shadow:none;" onclick="showDeleteRewardConfirm(${index})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // แสดงประวัติการแลกและสุ่มรหัสส่วนลด
+        function renderHistoryAdmin() {
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = '';
+
+            if (redemptions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px; font-weight:300;">ยังไม่มีประวัติการแลกส่วนลดในระบบค่ะ 🎟️</td></tr>`;
+                return;
+            }
+
+            // แสดงรายการล่าสุดขึ้นก่อน (Reverse Order)
+            [...redemptions].reverse().forEach(log => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="code-badge">${log.code}</span></td>
+                        <td><strong style="font-family:'Comfortaa', sans-serif; font-weight:400;">${log.memberId}</strong><br><span style="font-size:0.75rem; color:var(--text-muted); font-weight:300;">${log.memberName}</span></td>
+                        <td style="font-weight: 300;">${log.rewardName}</td>
+                        <td style="font-size: 0.75rem; color: var(--text-muted); font-weight:300;">${log.timestamp}</td>
+                    </tr>
+                `;
+            });
+        }
+
+
+        // --- 6. CLIENT ACTIONS ---
+
+        // ตรวจสอบสมาชิก
+        function checkMemberPoints() {
+            const searchIdInput = document.getElementById('search-member-id');
+            const searchId = searchIdInput.value.trim().toUpperCase();
+
+            if (!searchId) {
+                showAlert("เกิดข้อผิดพลาด", "โปรดระบุรหัสสมาชิกก่อนนะคะ 💙", "💎");
+                return;
+            }
+
+            const found = members.find(m => m.id === searchId);
+
+            if (found) {
+                activeMemberId = found.id;
+                document.getElementById('member-display-name').textContent = `ยินดีต้อนรับคุณ ${found.name} ✨`;
+                document.getElementById('member-display-points').textContent = found.points.toLocaleString();
+                document.getElementById('points-display-area').style.display = 'block';
+                showToast(`ยินดีต้อนรับค่ะ ${found.name}! ☁️`);
+            } else {
+                activeMemberId = null;
+                document.getElementById('points-display-area').style.display = 'none';
+                showAlert("ไม่พบรหัส", "ไม่พบรหัสสมาชิกนี้ในระบบคราบโปรดระบุรหัสสมาชิกให้ถูกต้อง 😢", "🔍");
+            }
+        }
+
+        // กดแลกรางวัล + แสดงหน้าจอแคปเจอร์สุ่มคูปองส่วนลด
+        function exchangeReward(pointsCost, rewardName) {
+            if (!activeMemberId) {
+                showAlert("ค้นหาเข้าสู่ระบบ", "โปรดกรอกรหัสสมาชิกและกดปุ่มค้นหาก่อนทำรายการแลกสิทธิ์นะคะ 🎟️", "🧸");
+                return;
+            }
+
+            const currentMember = members.find(m => m.id === activeMemberId);
+            if (!currentMember) return;
+
+            if (currentMember.points < pointsCost) {
+                showAlert("คะแนนไม่พอ", "คะแนนสะสมของคุณไม่เพียงพอสำหรับการแลกรับรางวัลนี้ค่ะ 😭", "☁️");
+                return;
+            }
+
+            // หักแต้ม
+            currentMember.points -= pointsCost;
+
+            // สุ่มรหัสส่วนลด
+            const generatedCode = generateRandomCouponCode();
+
+            // บันทึกเวลาแลก
+            const now = new Date();
+            const timeString = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            // บันทึกประวัติการแลกลง LocalStorage
+            const newRedemption = {
+                id: Date.now(),
+                memberId: currentMember.id,
+                memberName: currentMember.name,
+                rewardName: rewardName,
+                pointsCost: pointsCost,
+                code: generatedCode,
+                timestamp: timeString
+            };
+            redemptions.push(newRedemption);
+            saveData();
+
+            // แสดงข้อมูลบนป๊อปอัปสลิปแคปเจอร์หน้าจอ
+            document.getElementById('modal-reward-name').textContent = rewardName;
+            document.getElementById('modal-member-info').textContent = `${currentMember.id} - ${currentMember.name}`;
+            document.getElementById('modal-coupon-code').textContent = generatedCode;
+            document.getElementById('modal-timestamp').textContent = `แลกเมื่อ: ${timeString}`;
+            document.getElementById('modal-remaining-points').textContent = `คะแนนสะสมคงเหลือของคุณ: ${currentMember.points.toLocaleString()} แต้ม`;
+
+            // อัปเดตหน้าลูกค้าและหลังบ้าน
+            document.getElementById('member-display-points').textContent = currentMember.points.toLocaleString();
+            renderRewardsClient();
+            renderMembersAdmin();
+            renderHistoryAdmin();
+
+            // เปิดหน้าต่างคูปองให้แคปเจอร์หน้าจอ
+            openRedemptionModal();
+        }
+
+        function openRedemptionModal() {
+            document.getElementById('redemption-success-modal').classList.add('show');
+        }
+
+        function closeRedemptionModal() {
+            document.getElementById('redemption-success-modal').classList.remove('show');
+            showToast("สลิปคูปองถูกยืนยันการบันทึกแล้ว 💙");
+        }
+
+
+        // --- 7. SECURITY & ACCESS CONTROL (ระบบรหัสผ่าน) ---
+
+        // ขอดำเนินการเข้าโหมดแอดมิน
+        function requestAdminAccess() {
+            const adminView = document.getElementById('admin-view');
+            // ถ้าโหมดผู้พัฒนาเปิดอยู่แล้ว ให้สามารถกดปิดสลับเป็นโหมดลูกค้าได้โดยไม่ต้องใส่รหัสผ่านอีก
+            if (adminView.style.display === 'flex') {
+                exitAdminMode();
+                return;
+            }
+            
+            // เคลียร์อินพุตเก่าและแสดงป๊อปอัปยืนยันรหัสผ่าน PIN
+            document.getElementById('admin-pin-input').value = "";
+            document.getElementById('pin-access-modal').classList.add('show');
+            document.getElementById('admin-pin-input').focus();
+        }
+
+        function closePINAccessModal() {
+            document.getElementById('pin-access-modal').classList.remove('show');
+        }
+
+        // ตรวจสอบรหัสผ่านที่ป้อนเข้ามา
+        function verifyAdminPIN() {
+            const enteredPIN = document.getElementById('admin-pin-input').value.trim();
+
+            if (enteredPIN === adminPIN) {
+                closePINAccessModal();
+                enterAdminMode();
+            } else {
+                showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านสำหรับเข้าโหมดผู้พัฒนาไม่ถูกต้อง กรุณาลองใหม่อีกครั้งค่ะ 🔒", "❌");
+                document.getElementById('admin-pin-input').value = "";
+            }
+        }
+
+        // ฟังก์ชันสั่งเปลี่ยนรหัสผ่านแอดมิน (PIN)
+        function changeAdminPIN() {
+            const currentPINInput = document.getElementById('admin-pin-current');
+            const newPINInput = document.getElementById('admin-pin-new');
+
+            const currentPIN = currentPINInput.value.trim();
+            const newPIN = newPINInput.value.trim();
+
+            if (!currentPIN || !newPIN) {
+                showAlert("ข้อมูลไม่ครบ", "กรุณาระบุรหัสผ่านเดิมและรหัสผ่านใหม่ที่ต้องการเปลี่ยนด้วยค่ะ", "🔒");
+                return;
+            }
+
+            if (currentPIN !== adminPIN) {
+                showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านปัจจุบันไม่ถูกต้อง ไม่สามารถเปลี่ยนรหัสผ่านได้ค่ะ", "❌");
+                return;
+            }
+
+            if (newPIN.length < 4) {
+                showAlert("สั้นเกินไป", "กรุณาตั้งรหัสผ่านใหม่อย่างน้อย 4 ตัวอักษรขึ้นไปค่ะ", "🔑");
+                return;
+            }
+
+            // ทำการบันทึกรหัสผ่านใหม่
+            adminPIN = newPIN;
+            saveData();
+
+            currentPINInput.value = "";
+            newPINInput.value = "";
+            showToast("เปลี่ยนรหัสผ่านโหมดผู้พัฒนาสำเร็จแล้วค่ะ! 🔒");
+        }
+
+
+        // --- 8. DEVELOPER/ADMIN MANAGEMENT ACTIONS ---
+
+        // เพิ่มสมาชิกใหม่
+        function createNewMember() {
+            const idInput = document.getElementById('new-member-id');
+            const nameInput = document.getElementById('new-member-name');
+            const pointsInput = document.getElementById('new-member-points');
+
+            const id = idInput.value.trim().toUpperCase();
+            const name = nameInput.value.trim();
+            const points = parseInt(pointsInput.value) || 0;
+
+            if (!id || !name) {
+                showAlert("กรอกข้อมูล", "กรุณากรอกรหัสสมาชิกและชื่อสมาชิกให้ครบถ้วนก่อนนะคะ 💎", "📋");
+                return;
+            }
+
+            if (members.some(m => m.id === id)) {
+                showAlert("รหัสซ้ำ", "รหัสสมาชิกนี้ถูกใช้งานในระบบแล้วค่ะ 🌟", "❌");
+                return;
+            }
+
+            members.push({ id, name, points });
+            saveData();
+
+            idInput.value = '';
+            nameInput.value = '';
+            pointsInput.value = '0';
+
+            renderMembersAdmin();
+            showToast("เพิ่มสมาชิกใหม่เข้าสู่ฐานข้อมูลแล้วค่ะ ☁️");
+
+            if (activeMemberId === id) {
+                checkMemberPoints();
+            }
+        }
+
+        // ปุ่มลดยืนยันการลบสมาชิก
+        function showDeleteMemberConfirm(id) {
+            showConfirm(`คุณมั่นใจที่จะลบรหัสสมาชิก ${id} ออกจากระบบถาวรหรือไม่?`, () => {
+                members = members.filter(m => m.id !== id);
+                saveData();
+                renderMembersAdmin();
+                showToast("ลบข้อมูลสมาชิกสำเร็จแล้วค่ะ");
+                if (activeMemberId === id) {
+                    document.getElementById('points-display-area').style.display = 'none';
+                    activeMemberId = null;
+                }
+            });
+        }
+
+        // ปรับแต่งคะแนน
+        function adjustPoints(id, amount) {
+            const member = members.find(m => m.id === id);
+            if (!member) return;
+
+            if (member.points + amount < 0) {
+                member.points = 0;
+            } else {
+                member.points += amount;
+            }
+
+            saveData();
+            renderMembersAdmin();
+
+            if (activeMemberId === id) {
+                document.getElementById('member-display-points').textContent = member.points.toLocaleString();
+            }
+            showToast(`ปรับคะแนนสมาชิก ${id} สำเร็จ!`);
+        }
+
+        // เพิ่มหรือบันทึกแก้ไขของรางวัล
+        function saveReward() {
+            const nameInput = document.getElementById('reward-name-input');
+            const pointsInput = document.getElementById('reward-points-input');
+            const iconInput = document.getElementById('reward-icon-input');
+            const editIndexInput = document.getElementById('edit-reward-index');
+
+            const name = nameInput.value.trim();
+            const points = parseInt(pointsInput.value) || 0;
+            const icon = iconInput.value.trim() || "🎁";
+
+            if (!name || points <= 0) {
+                showAlert("กรอกข้อมูลผิดพลาด", "โปรดตรวจสอบข้อมูลคูปองและระบุแต้มสะสมแลกรางวัลที่ถูกต้องด้วยค่ะ 🍬", "☁️");
+                return;
+            }
+
+            const editIndex = editIndexInput.value;
+            if (editIndex !== "") {
+                // อัปเดตข้อมูลเดิม
+                rewards[parseInt(editIndex)] = {
+                    ...rewards[parseInt(editIndex)],
+                    name,
+                    points,
+                    icon
+                };
+                showToast("อัปเดตของรางวัลสำเร็จแล้วค่ะ ✨");
+            } else {
+                // สร้างรางวัลใหม่
+                const newId = rewards.length > 0 ? Math.max(...rewards.map(r => r.id)) + 1 : 1;
+                rewards.push({ id: newId, name, points, icon });
+                showToast("เพิ่มของรางวัลชิ้นใหม่สำเร็จแล้วค่ะ 🎀");
+            }
+
+            saveData();
+            cancelRewardEdit();
+            renderRewardsAdmin();
+            renderRewardsClient();
+        }
+
+        // หน้ายืนยันเพื่อขอลบรางวัล
+        function showDeleteRewardConfirm(index) {
+            showConfirm("คุณต้องการลบรางวัลรายการนี้ออกจากฐานข้อมูลใช่หรือไม่?", () => {
+                rewards.splice(index, 1);
+                saveData();
+                renderRewardsAdmin();
+                renderRewardsClient();
+                showToast("ลบรางวัลเรียบร้อยแล้ว");
+            });
+        }
+
+        // เริ่มต้นการอัปเดตแก้ไขรางวัล
+        function startEditReward(index) {
+            const item = rewards[index];
+            document.getElementById('reward-form-title').textContent = "✏️ EDIT REWARD INFO";
+            document.getElementById('reward-name-input').value = item.name;
+            document.getElementById('reward-points-input').value = item.points;
+            document.getElementById('reward-icon-input').value = item.icon;
+            document.getElementById('edit-reward-index').value = index;
+            document.getElementById('btn-cancel-reward-edit').style.display = 'inline-flex';
+        }
+
+        // สั่งยกเลิกการแก้ไขฟอร์มของรางวัล
+        function cancelRewardEdit() {
+            document.getElementById('reward-form-title').textContent = "➕ ADD NEW REWARD";
+            document.getElementById('reward-name-input').value = '';
+            document.getElementById('reward-points-input').value = '';
+            document.getElementById('reward-icon-input').value = '';
+            document.getElementById('edit-reward-index').value = '';
+            document.getElementById('btn-cancel-reward-edit').style.display = 'none';
+        }
+
+        // เคลียร์ล้างประวัติส่วนลดแลกของหลังบ้านทั้งหมด
+        function showClearHistoryConfirm() {
+            if (redemptions.length === 0) {
+                showAlert("ประวัติว่าง", "ไม่มีประวัติการแลกส่วนลดค้างในระบบอยู่แล้วค่ะ 💎", "🧸");
+                return;
+            }
+            showConfirm("คุณต้องการล้างประวัติข้อมูลการแลกรับสิทธิ์ทั้งหมดหลังบ้านใช่หรือไม่? (การแลกแต้มของลูกค้าก่อนหน้าจะไม่ได้รับผลกระทบ)", () => {
+                redemptions = [];
+                saveData();
+                renderHistoryAdmin();
+                showToast("ล้างบันทึกประวัติสำเร็จแล้วค่ะ");
+            });
+        }
+
+
+        // --- 9. PAGE NAVIGATION VIEW CONTROL ---
+
+        // เข้าสู่โหมดผู้พัฒนาแบบทางการ (หลังตรวจสอบรหัส PIN สำเร็จแล้ว)
+        function enterAdminMode() {
+            const clientView = document.getElementById('client-view');
+            const adminView = document.getElementById('admin-view');
+            const toggleBtn = document.getElementById('mode-toggle-btn');
+
+            clientView.style.display = 'none';
+            adminView.style.display = 'flex';
+            toggleBtn.textContent = "CLIENT";
+            toggleBtn.style.background = "#5B9FE3";
+            toggleBtn.style.color = "white";
+            
+            // โหลดและเชื่อมฐานข้อมูล
+            renderMembersAdmin();
+            renderRewardsAdmin();
+            renderHistoryAdmin();
+            showToast("เข้าสู่ระบบจัดการของผู้พัฒนาเรียบร้อยค่ะ 🛠️");
+        }
+
+        // ยกเลิกออกจากระบบแอดมิน
+        function exitAdminMode() {
+            document.getElementById('client-view').style.display = 'flex';
+            document.getElementById('admin-view').style.display = 'none';
+            const toggleBtn = document.getElementById('mode-toggle-btn');
+            toggleBtn.textContent = "ADMIN";
+            toggleBtn.style.background = "#F0F7FF";
+            toggleBtn.style.color = "var(--dark-blue)";
+            showToast("สลับเข้าสู่หน้าต่างสำหรับลูกค้า 💙");
+        }
+
+        // ควบคุมสวิตช์แท็บหลังบ้านของแอดมิน
+        function switchAdminTab(tabName) {
+            const tabMembers = document.getElementById('tab-members');
+            const tabRewards = document.getElementById('tab-rewards');
+            const tabHistory = document.getElementById('tab-history');
+
+            const secMembers = document.getElementById('admin-section-members');
+            const secRewards = document.getElementById('admin-section-rewards');
+            const secHistory = document.getElementById('admin-section-history');
+
+            // ลบการทำงานแอคทีฟทั้งหมด
+            tabMembers.classList.remove('active');
+            tabRewards.classList.remove('active');
+            tabHistory.classList.remove('active');
+            secMembers.classList.remove('active');
+            secRewards.classList.remove('active');
+            secHistory.classList.remove('active');
+
+            if (tabName === 'members') {
+                tabMembers.classList.add('active');
+                secMembers.classList.add('active');
+            } else if (tabName === 'rewards') {
+                tabRewards.classList.add('active');
+                secRewards.classList.add('active');
+            } else {
+                tabHistory.classList.add('active');
+                secHistory.classList.add('active');
+                renderHistoryAdmin(); // ดึงอัปเดตประวัติการแลกล่าสุด
+            }
+        }
+
+
+        // --- 10. APP INITIALIZATION ---
+        window.onload = function() {
+            renderRewardsClient();
+            
+            // ดักฟังก์ชันปุ่ม Enter สำหรับการกรอกรหัส PIN คีย์บอร์ด
+            document.getElementById('admin-pin-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyAdminPIN();
+                }
+            });
+        };
+
+    </script>
 </body>
 </html>
+
