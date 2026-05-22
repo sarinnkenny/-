@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yukishiro - ระบบสะสมแต้มพาสเทลสีฟ้าละมุน</title>
+    <title>Yukishiro - ระบบสะสมแต้มออนไลน์พาสเทลสีฟ้า</title>
     
     <!-- Google Fonts: Comfortaa (ฟอนต์อังกฤษบางกลมมน) และ Mitr (ฟอนต์ไทยบางพรีเมียมอ่านง่าย) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,6 +48,37 @@
             position: relative;
         }
 
+        /* --- CLOUD SYNC LOADING OVERLAY --- */
+        .sync-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #E0F2FE;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .sync-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(147, 197, 253, 0.3);
+            border-top: 4px solid var(--dark-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* --- BACKGROUND BUBBLE EFFECT (ฟองพาสเทลลอยละล่อง) --- */
         .bubble-container {
             position: fixed;
@@ -80,12 +111,8 @@
                 transform: translateY(0) scale(1) rotate(0deg);
                 opacity: 0;
             }
-            10% {
-                opacity: 0.6;
-            }
-            90% {
-                opacity: 0.6;
-            }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
             100% {
                 transform: translateY(-110vh) scale(1.1) rotate(360deg);
                 opacity: 0;
@@ -101,7 +128,7 @@
             -webkit-backdrop-filter: blur(25px);
             min-height: 100vh;
             box-shadow: 0 0 50px rgba(147, 197, 253, 0.15);
-            padding: 20px 20px 120px 20px;
+            padding: 20px 20px 40px 20px; /* ปรับลดระยะขอบล่างเมื่อลบไลน์ไอดีออก */
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -124,7 +151,7 @@
         /* ฟอนต์สไตล์เดียวกับในรูปแนบ (ผอม, บาง, และ Minimalist) */
         .brand-font {
             font-family: 'Comfortaa', sans-serif;
-            font-weight: 300; /* ให้เส้นอักษรดูผอมบาง */
+            font-weight: 300; 
             letter-spacing: 1px;
         }
 
@@ -490,47 +517,6 @@
             opacity: 1;
         }
 
-        /* --- FLOATING LINE FOOTER --- */
-        .footer-fixed {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 40px);
-            max-width: 440px;
-            z-index: 99;
-        }
-
-        .btn-line {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: #06C755;
-            color: white;
-            text-decoration: none;
-            padding: 12px;
-            border-radius: 18px;
-            font-weight: 300;
-            font-size: 0.95rem;
-            box-shadow: 0 6px 20px rgba(6, 199, 85, 0.25);
-            transition: var(--transition);
-        }
-
-        .btn-line:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(6, 199, 85, 0.35);
-        }
-
-        .line-badge {
-            background: white;
-            color: #06C755;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-
         /* --- CUTE MODAL SYSTEM --- */
         .modal-overlay {
             position: fixed;
@@ -663,6 +649,12 @@
 </head>
 <body>
 
+    <!-- คลาวด์โหลดดิ้งป้องกันสะดุดระหว่างต่อฐานข้อมูลส่วนกลาง -->
+    <div id="sync-loader" class="sync-overlay">
+        <div class="sync-spinner"></div>
+        <p style="font-family: 'Comfortaa', sans-serif; font-size: 1rem; color: var(--dark-blue); font-weight:300; letter-spacing:1px;" id="loader-text">CONNECTING TO CLOUD DATABASE...</p>
+    </div>
+
     <!-- พื้นหลังฟองพาสเทลขยับได้ -->
     <div class="bubble-container">
         <div class="bubble"></div>
@@ -714,7 +706,7 @@
                 </div>
             </section>
 
-            <!-- รีวิวน่ารักๆ จากลูกค้า -->
+            <!-- รีวิวน่ารักๆ จากลูกค้า และเกณฑ์ของร้าน -->
             <section class="blue-card">
                 <div class="card-title brand-font">what can I do</div>
                 <div class="items-grid" style="gap: 8px;">
@@ -737,6 +729,7 @@
                 <div>
                     <h3 class="brand-font" style="color: var(--dark-blue); font-size: 1.1rem; font-weight: 400;">🛠️ DEVELOPER CONTROL</h3>
                     <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 300;">จัดการสมาชิก คูปอง และตรวจสอบประวัติแลกรางวัล</p>
+                    <div id="database-status-badge" style="display:inline-block; margin-top: 6px; padding: 2px 10px; font-size: 11px; background: #E2E8F0; border-radius: 6px; color: #475569; font-weight: 300;">Checking connection...</div>
                 </div>
                 <button class="btn btn-outline btn-mini" style="width: auto; height: auto; padding: 6px 12px;" onclick="exitAdminMode()">ออก</button>
             </div>
@@ -847,7 +840,7 @@
                 </div>
             </div>
 
-            <!-- หน้าแอดมินแท็บ 3: ประวัติการแลก (REDEMPTION HISTORY LOG) -->
+            <!-- หน้าแอดมินแท็บ 3: ประวัติการแลก -->
             <div id="admin-section-history" class="admin-section-content">
                 <div class="blue-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
@@ -875,19 +868,11 @@
 
         </div>
 
-        <!-- FOOTER: ปุ่มติดต่อ LINE สุดพาสเทล -->
-        <div class="footer-fixed">
-            <a href="https://line.me" target="_blank" class="btn-line">
-                <span class="line-badge brand-font">LINE ID</span>
-                @yukishiro_studio (คลิกเพื่อติดต่อ)
-            </a>
-        </div>
-
     </div>
 
-    <!-- ================= MODALS (ป๊อปอัปน่ารักต่างๆ แทนการใช้ Browser Alert) ================= -->
+    <!-- ================= MODALS ================= -->
 
-    <!-- 1. ป๊อปอัปสแกน/กรอกรหัสผ่านเพื่อเข้าโหมดแอดมิน -->
+    <!-- 1. ป๊อปอัปกรอกรหัสผ่านเพื่อเข้าโหมดแอดมิน -->
     <div id="pin-access-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 360px;">
             <div style="font-size: 3rem; margin-bottom: 10px;">🔒</div>
@@ -961,17 +946,33 @@
     <div id="toast-notify" class="toast">แลกของรางวัลเรียบร้อยแล้วค่ะ 💙</div>
 
 
-    <!-- ================= JAVASCRIPT LOGIC ================= -->
-    <script>
-        // --- 1. INITIAL/MOCK DATA ---
-        // สมาชิกเริ่มต้นในระบบ (ปรับแต่งเป็นรหัสธีม Yukishiro 'YS')
+    <!-- ================= JAVASCRIPT & FIREBASE CONNECTIVITY ================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration ที่คุณกำหนดมา
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoCeEQpZSlO-BedWeplzKDXrT3F3Q24AY",
+            authDomain: "shiromember-1defe.firebaseapp.com",
+            projectId: "shiromember-1defe",
+            storageBucket: "shiromember-1defe.firebasestorage.app",
+            messagingSenderId: "345063328316",
+            appId: "1:345063328316:web:780c490de8b815dd8f1139"
+        };
+
+        let databaseMode = 'checking'; 
+        let app, auth, db;
+        const appId = 'shiromember-1defe';
+
+        // ข้อมูลดีฟอลต์เมื่อใช้โหมด LocalStorage สำรอง หรือเมื่อต่อคลาวด์ครั้งแรก
         const defaultMembers = [
             { id: "YS01", name: "คุณสโนว์บลูเบอร์รี่", points: 1250 },
             { id: "YS02", name: "คุณเมฆาครามพาสเทล", points: 450 },
             { id: "YS03", name: "คุณยูกิฮานะ", points: 80 }
         ];
 
-        // ของรางวัล/ส่วนลดเริ่มต้น
         const defaultRewards = [
             { id: 1, name: "Griptok ก้อนเมฆนุ่มฟูสีคราม", points: 300, icon: "☁️" },
             { id: 2, name: "พวงกุญแจเกล็ดหิมะ Yukishiro", points: 500, icon: "❄️" },
@@ -979,90 +980,640 @@
             { id: 4, name: "กระบอกน้ำเก็บความเย็นสีสกายพาสเทล", points: 1200, icon: "🥤" }
         ];
 
-        // โหลดข้อมูลจาก LocalStorage หรือดึงข้อมูลเริ่มต้น
-        let members = JSON.parse(localStorage.getItem('ys_members')) || defaultMembers;
-        let rewards = JSON.parse(localStorage.getItem('ys_rewards')) || defaultRewards;
-        let redemptions = JSON.parse(localStorage.getItem('ys_redemptions')) || [];
-        
-        // รหัสผ่านแอดมินเริ่มต้นเป็น 1234
-        let adminPIN = localStorage.getItem('ys_admin_pin') || "1234";
-
-        // รหัสสมาชิกที่กำลังค้นหาข้อมูลอยู่ฝั่งลูกค้า
+        let members = [];
+        let rewards = [];
+        let redemptions = [];
+        let adminPIN = "1234"; 
         let activeMemberId = null;
-
-        // ตัวแปรเก็บฟังก์ชันการทำงานของปุ่ม Yes บนโมดอลยืนยัน
         let confirmActionCallback = null;
 
-        // --- 2. LOCALSTORAGE SYNC ---
-        function saveData() {
+        // ฟังก์ชันเริ่มการทำงานของแอปแบบ Hybrid เพื่อไม่ให้หน้าจอค้างเด็ดขาด
+        const initAppSystem = async () => {
+            const loaderText = document.getElementById('loader-text');
+            const statusBadge = document.getElementById('database-status-badge');
+            
+            try {
+                loaderText.textContent = "CONNECTING TO CLOUD DATABASE...";
+                
+                // ทดสอบเชื่อมต่อคลาวด์จริง โดยกำหนดเวลา Timeout ไว้ที่ 4 วินาที
+                const connectionPromise = new Promise(async (resolve, reject) => {
+                    try {
+                        app = initializeApp(firebaseConfig);
+                        auth = getAuth(app);
+                        db = getFirestore(app);
+                        
+                        await signInAnonymously(auth);
+                        resolve(true);
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000));
+                
+                await Promise.race([connectionPromise, timeoutPromise]);
+                
+                // หากเชื่อมต่อได้และอนุญาตสิทธิ์สำเร็จ
+                databaseMode = 'online';
+                statusBadge.innerHTML = "🟢 คลาวด์ออนไลน์ (Firebase Firestore)";
+                statusBadge.style.background = "#D1FAE5";
+                statusBadge.style.color = "#065F46";
+                
+                listenToCloudData();
+
+            } catch (error) {
+                console.warn("ไม่สามารถเชื่อมต่อคลาวด์ตรงได้ กำลังสลับไปใช้ระบบจัดเก็บในอุปกรณ์ชั่วคราว:", error);
+                
+                // ย้ายฐานข้อมูลลง LocalStorage อัตโนมัติเพื่อให้พร้อมใช้ทันทีที่ร้าน
+                databaseMode = 'offline';
+                statusBadge.innerHTML = "🟡 ออฟไลน์โหมด (จัดเก็บในเครื่องนี้ชั่วคราว)";
+                statusBadge.style.background = "#FEF3C7";
+                statusBadge.style.color = "#92400E";
+                
+                loadOfflineData();
+                hideCloudLoader();
+            }
+        };
+
+        // --- 1. CLOUD SYNCHRONIZER (ดึงข้อมูลคลาวด์เรียลไทม์) ---
+        const listenToCloudData = () => {
+            // ดึงพาธคลาวด์ตาม Rule 1 ของระบบสิ่งแวดล้อมจำกัดอย่างถูกต้อง
+            const membersRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
+            const rewardsRef = collection(db, 'artifacts', appId, 'public', 'data', 'rewards');
+            const redemptionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'redemptions');
+            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'security');
+
+            onSnapshot(membersRef, (snapshot) => {
+                const fetched = [];
+                snapshot.forEach(doc => fetched.push(doc.data()));
+                members = fetched;
+
+                if (members.length === 0) {
+                    defaultMembers.forEach(async (m) => {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', m.id), m);
+                    });
+                }
+                
+                if (activeMemberId) {
+                    const current = members.find(m => m.id === activeMemberId);
+                    if (current) {
+                        document.getElementById('member-display-points').textContent = current.points.toLocaleString();
+                    }
+                }
+
+                window.renderMembersAdmin();
+                hideCloudLoader();
+            }, (err) => {
+                console.error("Firestore permission denied. Switching to offline backup.", err);
+                switchToOfflineFallback();
+            });
+
+            onSnapshot(rewardsRef, (snapshot) => {
+                const fetched = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    data.docId = doc.id;
+                    fetched.push(data);
+                });
+                rewards = fetched;
+
+                if (rewards.length === 0) {
+                    defaultRewards.forEach(async (r) => {
+                        await addDoc(rewardsRef, r);
+                    });
+                }
+
+                window.renderRewardsClient();
+                window.renderRewardsAdmin();
+            });
+
+            onSnapshot(redemptionsRef, (snapshot) => {
+                const fetched = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    data.docId = doc.id;
+                    fetched.push(data);
+                });
+                redemptions = fetched;
+                window.renderHistoryAdmin();
+            });
+
+            onSnapshot(configRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    adminPIN = docSnap.data().adminPIN || "1234";
+                } else {
+                    setDoc(configRef, { adminPIN: "1234" });
+                }
+            });
+        };
+
+        // --- 2. LOCALSTORAGE FALLBACK (กรณีไม่มีเน็ต หรือ Firebase ติดสิทธิ์) ---
+        const loadOfflineData = () => {
+            members = JSON.parse(localStorage.getItem('ys_members')) || defaultMembers;
+            rewards = JSON.parse(localStorage.getItem('ys_rewards')) || defaultRewards;
+            redemptions = JSON.parse(localStorage.getItem('ys_redemptions')) || [];
+            adminPIN = localStorage.getItem('ys_admin_pin') || "1234";
+
+            saveOfflineData();
+            window.renderRewardsClient();
+            window.renderRewardsAdmin();
+            window.renderMembersAdmin();
+            window.renderHistoryAdmin();
+        };
+
+        const saveOfflineData = () => {
             localStorage.setItem('ys_members', JSON.stringify(members));
             localStorage.setItem('ys_rewards', JSON.stringify(rewards));
             localStorage.setItem('ys_redemptions', JSON.stringify(redemptions));
             localStorage.setItem('ys_admin_pin', adminPIN);
+        };
+
+        const switchToOfflineFallback = () => {
+            if (databaseMode === 'online') {
+                databaseMode = 'offline';
+                const statusBadge = document.getElementById('database-status-badge');
+                statusBadge.innerHTML = "🟡 ออฟไลน์โหมด (ตรวจพบคลาวด์ล็อกความปลอดภัย)";
+                statusBadge.style.background = "#FEF3C7";
+                statusBadge.style.color = "#92400E";
+                loadOfflineData();
+                hideCloudLoader();
+            }
+        };
+
+        function hideCloudLoader() {
+            const loader = document.getElementById('sync-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }
         }
 
-        // --- 3. TOAST & CUTE MODALS CONTROL ---
-        
-        // ฟังก์ชันเรียกใช้ Toast สั้นๆ
-        function showToast(message) {
+        // --- EXPORT FUNCTIONS TO GLOBAL WINDOW FOR INLINE HTML ONCLICK ---
+        window.showToast = function(message) {
             const toast = document.getElementById('toast-notify');
             toast.textContent = message;
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        };
 
-        // เปิดป๊อปอัปแจ้งเตือนแทน Alert
-        function showAlert(title, message, icon = "❄️") {
+        window.showAlert = function(title, message, icon = "❄️") {
             document.getElementById('alert-title').textContent = title;
             document.getElementById('alert-message').textContent = message;
             document.getElementById('alert-icon').textContent = icon;
             document.getElementById('alert-modal').classList.add('show');
-        }
+        };
 
-        // ปิดป๊อปอัปแจ้งเตือน
-        function closeAlertModal() {
+        window.closeAlertModal = function() {
             document.getElementById('alert-modal').classList.remove('show');
-        }
+        };
 
-        // เปิดป๊อปอัปยืนยันแทน Confirm
-        function showConfirm(message, callback) {
+        window.showConfirm = function(message, callback) {
             document.getElementById('confirm-message').textContent = message;
             confirmActionCallback = callback;
             document.getElementById('confirm-modal').classList.add('show');
-        }
+        };
 
-        // ปิดป๊อปอัปยืนยัน
-        function closeConfirmModal() {
+        window.closeConfirmModal = function() {
             document.getElementById('confirm-modal').classList.remove('show');
             confirmActionCallback = null;
-        }
+        };
 
-        // ตัวเชื่อมฟังก์ชันตอบตกลงปุ่ม Yes ใน Modal ยืนยัน
-        document.getElementById('confirm-yes-btn').addEventListener('click', () => {
-            if (confirmActionCallback) {
-                confirmActionCallback();
+        // --- CLIENT ACTIONS ---
+        window.checkMemberPoints = function() {
+            const searchIdInput = document.getElementById('search-member-id');
+            const searchId = searchIdInput.value.trim().toUpperCase();
+
+            if (!searchId) {
+                window.showAlert("เกิดข้อผิดพลาด", "โปรดระบุรหัสสมาชิกก่อนนะคะ 💙", "💎");
+                return;
             }
-            closeConfirmModal();
-        });
 
+            const found = members.find(m => m.id === searchId);
 
-        // --- 4. REDEMPTION CODE GENERATOR (ระบบสุ่มรหัสส่วนลดธีม YS) ---
-        function generateRandomCouponCode() {
+            if (found) {
+                activeMemberId = found.id;
+                document.getElementById('member-display-name').textContent = `ยินดีต้อนรับคุณ ${found.name} ✨`;
+                document.getElementById('member-display-points').textContent = found.points.toLocaleString();
+                document.getElementById('points-display-area').style.display = 'block';
+                window.showToast(`ยินดีต้อนรับค่ะ ${found.name}! ☁️`);
+            } else {
+                activeMemberId = null;
+                document.getElementById('points-display-area').style.display = 'none';
+                window.showAlert("ไม่พบรหัส", "ไม่พบรหัสสมาชิกนี้ในระบบค่ะ โปรดระบุรหัสสมาชิกให้ถูกต้อง 😢", "🔍");
+            }
+        };
+
+        window.exchangeReward = async function(pointsCost, rewardName) {
+            if (!activeMemberId) {
+                window.showAlert("ค้นหาเข้าสู่ระบบ", "โปรดกรอกรหัสสมาชิกและกดปุ่มค้นหาก่อนทำรายการแลกสิทธิ์นะคะ 🎟️", "🧸");
+                return;
+            }
+
+            const currentMember = members.find(m => m.id === activeMemberId);
+            if (!currentMember) return;
+
+            if (currentMember.points < pointsCost) {
+                window.showAlert("คะแนนไม่พอ", "คะแนนสะสมของคุณไม่เพียงพอสำหรับการแลกรับรางวัลนี้ค่ะ 😭", "☁️");
+                return;
+            }
+
+            const nextPoints = currentMember.points - pointsCost;
+
+            // สุ่มรหัสส่วนลด
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = 'YS-';
+            let generatedCode = 'YS-';
             for (let i = 0; i < 6; i++) {
-                result += characters.charAt(Math.floor(Math.random() * characters.length));
+                generatedCode += characters.charAt(Math.floor(Math.random() * characters.length));
             }
-            return result;
-        }
 
+            const now = new Date();
+            const timeString = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-        // --- 5. RENDER FUNCTIONS ---
-        
-        // แสดงรายการของรางวัลฝั่งลูกค้า
-        function renderRewardsClient() {
+            const redemptionData = {
+                id: Date.now(),
+                memberId: currentMember.id,
+                memberName: currentMember.name,
+                rewardName: rewardName,
+                pointsCost: pointsCost,
+                code: generatedCode,
+                timestamp: timeString
+            };
+
+            if (databaseMode === 'online') {
+                try {
+                    const memberDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', currentMember.id);
+                    await updateDoc(memberDocRef, { points: nextPoints });
+
+                    const redemptionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'redemptions');
+                    await addDoc(redemptionsRef, redemptionData);
+                } catch (e) {
+                    console.error("Firestore update failed, falling back to local edit:", e);
+                    switchToOfflineFallback();
+                }
+            } 
+            
+            if (databaseMode === 'offline') {
+                currentMember.points = nextPoints;
+                redemptions.push(redemptionData);
+                saveOfflineData();
+                
+                document.getElementById('member-display-points').textContent = nextPoints.toLocaleString();
+                window.renderRewardsClient();
+                window.renderMembersAdmin();
+                window.renderHistoryAdmin();
+            }
+
+            document.getElementById('modal-reward-name').textContent = rewardName;
+            document.getElementById('modal-member-info').textContent = `${currentMember.id} - ${currentMember.name}`;
+            document.getElementById('modal-coupon-code').textContent = generatedCode;
+            document.getElementById('modal-timestamp').textContent = `แลกเมื่อ: ${timeString}`;
+            document.getElementById('modal-remaining-points').textContent = `คะแนนสะสมคงเหลือของคุณ: ${nextPoints.toLocaleString()} แต้ม`;
+
+            window.openRedemptionModal();
+        };
+
+        window.openRedemptionModal = function() {
+            document.getElementById('redemption-success-modal').classList.add('show');
+        };
+
+        window.closeRedemptionModal = function() {
+            document.getElementById('redemption-success-modal').classList.remove('show');
+            window.showToast("สลิปคูปองถูกยืนยันการบันทึกแล้ว 💙");
+        };
+
+        // --- SECURITY CONTROLS ---
+        window.requestAdminAccess = function() {
+            const adminView = document.getElementById('admin-view');
+            if (adminView.style.display === 'flex') {
+                exitAdminMode();
+                return;
+            }
+            document.getElementById('admin-pin-input').value = "";
+            document.getElementById('pin-access-modal').classList.add('show');
+            document.getElementById('admin-pin-input').focus();
+        };
+
+        window.closePINAccessModal = function() {
+            document.getElementById('pin-access-modal').classList.remove('show');
+        };
+
+        window.verifyAdminPIN = function() {
+            const enteredPIN = document.getElementById('admin-pin-input').value.trim();
+
+            if (enteredPIN === adminPIN) {
+                closePINAccessModal();
+                enterAdminMode();
+            } else {
+                window.showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านสำหรับเข้าโหมดผู้พัฒนาไม่ถูกต้อง กรุณาลองใหม่อีกครั้งค่ะ 🔒", "❌");
+                document.getElementById('admin-pin-input').value = "";
+            }
+        };
+
+        window.changeAdminPIN = async function() {
+            const currentPINInput = document.getElementById('admin-pin-current');
+            const newPINInput = document.getElementById('admin-pin-new');
+
+            const currentPIN = currentPINInput.value.trim();
+            const newPIN = newPINInput.value.trim();
+
+            if (!currentPIN || !newPIN) {
+                window.showAlert("ข้อมูลไม่ครบ", "กรุณาระบุรหัสผ่านเดิมและรหัสผ่านใหม่ที่ต้องการเปลี่ยนด้วยค่ะ", "🔒");
+                return;
+            }
+
+            if (currentPIN !== adminPIN) {
+                window.showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านปัจจุบันไม่ถูกต้อง ไม่สามารถเปลี่ยนรหัสผ่านได้ค่ะ", "❌");
+                return;
+            }
+
+            if (newPIN.length < 4) {
+                window.showAlert("สั้นเกินไป", "กรุณาตั้งรหัสผ่านใหม่อย่างน้อย 4 ตัวอักษรขึ้นไปค่ะ", "🔑");
+                return;
+            }
+
+            adminPIN = newPIN;
+
+            if (databaseMode === 'online') {
+                try {
+                    const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'security');
+                    await setDoc(configRef, { adminPIN: newPIN });
+                } catch (e) {
+                    switchToOfflineFallback();
+                }
+            } else {
+                saveOfflineData();
+            }
+
+            currentPINInput.value = "";
+            newPINInput.value = "";
+            window.showToast("เปลี่ยนรหัสผ่านโหมดผู้พัฒนาสำเร็จแล้วค่ะ! 🔒");
+        };
+
+        // --- DEVELOPER ACTIONS ---
+        window.createNewMember = async function() {
+            const idInput = document.getElementById('new-member-id');
+            const nameInput = document.getElementById('new-member-name');
+            const pointsInput = document.getElementById('new-member-points');
+
+            const id = idInput.value.trim().toUpperCase();
+            const name = nameInput.value.trim();
+            const points = parseInt(pointsInput.value) || 0;
+
+            if (!id || !name) {
+                window.showAlert("กรอกข้อมูล", "กรุณากรอกรหัสสมาชิกและชื่อสมาชิกให้ครบถ้วนก่อนนะคะ 💎", "📋");
+                return;
+            }
+
+            if (members.some(m => m.id === id)) {
+                window.showAlert("รหัสซ้ำ", "รหัสสมาชิกนี้ถูกใช้งานในระบบแล้วค่ะ 🌟", "❌");
+                return;
+            }
+
+            const memberData = { id, name, points };
+
+            if (databaseMode === 'online') {
+                try {
+                    const memberDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', id);
+                    await setDoc(memberDocRef, memberData);
+                } catch (e) {
+                    switchToOfflineFallback();
+                }
+            } else {
+                members.push(memberData);
+                saveOfflineData();
+                window.renderMembersAdmin();
+            }
+
+            idInput.value = '';
+            nameInput.value = '';
+            pointsInput.value = '0';
+
+            window.showToast("เพิ่มสมาชิกใหม่เข้าสู่ระบบออนไลน์แล้วค่ะ ☁️");
+            
+            if (activeMemberId === id) {
+                window.checkMemberPoints();
+            }
+        };
+
+        window.showDeleteMemberConfirm = function(id) {
+            window.showConfirm(`คุณมั่นใจที่จะลบรหัสสมาชิก ${id} ออกจากระบบถาวรหรือไม่?`, async () => {
+                if (databaseMode === 'online') {
+                    try {
+                        const memberDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', id);
+                        await deleteDoc(memberDocRef);
+                    } catch (e) {
+                        switchToOfflineFallback();
+                    }
+                } else {
+                    members = members.filter(m => m.id !== id);
+                    saveOfflineData();
+                    window.renderMembersAdmin();
+                }
+                
+                window.showToast("ลบข้อมูลสมาชิกสำเร็จแล้วค่ะ");
+                if (activeMemberId === id) {
+                    document.getElementById('points-display-area').style.display = 'none';
+                    activeMemberId = null;
+                }
+            });
+        };
+
+        window.adjustPoints = async function(id, amount) {
+            const member = members.find(m => m.id === id);
+            if (!member) return;
+
+            let nextPoints = member.points + amount;
+            if (nextPoints < 0) nextPoints = 0;
+
+            if (databaseMode === 'online') {
+                try {
+                    const memberDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', id);
+                    await updateDoc(memberDocRef, { points: nextPoints });
+                } catch (e) {
+                    switchToOfflineFallback();
+                }
+            } else {
+                member.points = nextPoints;
+                saveOfflineData();
+                window.renderMembersAdmin();
+            }
+            
+            if (activeMemberId === id) {
+                document.getElementById('member-display-points').textContent = nextPoints.toLocaleString();
+            }
+            window.showToast(`ปรับคะแนนสมาชิก ${id} สำเร็จ!`);
+        };
+
+        window.saveReward = async function() {
+            const nameInput = document.getElementById('reward-name-input');
+            const pointsInput = document.getElementById('reward-points-input');
+            const iconInput = document.getElementById('reward-icon-input');
+            const editIndexInput = document.getElementById('edit-reward-index');
+
+            const name = nameInput.value.trim();
+            const points = parseInt(pointsInput.value) || 0;
+            const icon = iconInput.value.trim() || "🎁";
+
+            if (!name || points <= 0) {
+                window.showAlert("กรอกข้อมูลผิดพลาด", "โปรดตรวจสอบข้อมูลคูปองและระบุแต้มสะสมแลกรางวัลที่ถูกต้องด้วยค่ะ 🍬", "☁️");
+                return;
+            }
+
+            const editIndex = editIndexInput.value;
+
+            if (databaseMode === 'online') {
+                try {
+                    if (editIndex !== "") {
+                        const targetDocId = rewards[parseInt(editIndex)].docId;
+                        const rewardDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rewards', targetDocId);
+                        await updateDoc(rewardDocRef, { name, points, icon });
+                        window.showToast("อัปเดตของรางวัลสำเร็จแล้วค่ะ ✨");
+                    } else {
+                        const rewardsRef = collection(db, 'artifacts', appId, 'public', 'data', 'rewards');
+                        const newId = rewards.length > 0 ? Math.max(...rewards.map(r => r.id)) + 1 : 1;
+                        await addDoc(rewardsRef, { id: newId, name, points, icon });
+                        window.showToast("เพิ่มของรางวัลชิ้นใหม่สำเร็จแล้วค่ะ 🎀");
+                    }
+                } catch (e) {
+                    switchToOfflineFallback();
+                }
+            } else {
+                if (editIndex !== "") {
+                    rewards[parseInt(editIndex)] = { ...rewards[parseInt(editIndex)], name, points, icon };
+                    window.showToast("อัปเดตของรางวัลสำเร็จแล้วค่ะ ✨");
+                } else {
+                    const newId = rewards.length > 0 ? Math.max(...rewards.map(r => r.id)) + 1 : 1;
+                    rewards.push({ id: newId, name, points, icon });
+                    window.showToast("เพิ่มของรางวัลชิ้นใหม่สำเร็จแล้วค่ะ 🎀");
+                }
+                saveOfflineData();
+                window.renderRewardsClient();
+                window.renderRewardsAdmin();
+            }
+
+            window.cancelRewardEdit();
+        };
+
+        window.showDeleteRewardConfirm = function(docIdOrIndex) {
+            window.showConfirm("คุณต้องการลบรางวัลรายการนี้ออกจากฐานข้อมูลใช่หรือไม่?", async () => {
+                if (databaseMode === 'online') {
+                    try {
+                        const rewardDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rewards', docIdOrIndex);
+                        await deleteDoc(rewardDocRef);
+                    } catch (e) {
+                        switchToOfflineFallback();
+                    }
+                } else {
+                    const index = rewards.findIndex(r => r.id.toString() === docIdOrIndex || r.docId === docIdOrIndex);
+                    if (index !== -1) {
+                        rewards.splice(index, 1);
+                    } else {
+                        rewards.splice(parseInt(docIdOrIndex), 1);
+                    }
+                    saveOfflineData();
+                    window.renderRewardsClient();
+                    window.renderRewardsAdmin();
+                }
+                window.showToast("ลบรางวัลเรียบร้อยแล้ว");
+            });
+        };
+
+        window.startEditReward = function(index) {
+            const item = rewards[index];
+            document.getElementById('reward-form-title').innerHTML = "✏️&nbsp; EDIT REWARD INFO";
+            document.getElementById('reward-name-input').value = item.name;
+            document.getElementById('reward-points-input').value = item.points;
+            document.getElementById('reward-icon-input').value = item.icon;
+            document.getElementById('edit-reward-index').value = index;
+            document.getElementById('btn-cancel-reward-edit').style.display = 'inline-flex';
+        };
+
+        window.cancelRewardEdit = function() {
+            document.getElementById('reward-form-title').textContent = "➕ ADD NEW REWARD";
+            document.getElementById('reward-name-input').value = '';
+            document.getElementById('reward-points-input').value = '';
+            document.getElementById('reward-icon-input').value = '';
+            document.getElementById('edit-reward-index').value = '';
+            document.getElementById('btn-cancel-reward-edit').style.display = 'none';
+        };
+
+        window.showClearHistoryConfirm = function() {
+            if (redemptions.length === 0) {
+                window.showAlert("ประวัติว่าง", "ไม่มีประวัติการแลกส่วนลดค้างในระบบอยู่แล้วค่ะ 💎", "🧸");
+                return;
+            }
+            window.showConfirm("คุณต้องการล้างประวัติข้อมูลคูปองแลกทั้งหมดบนระบบคลาวด์/เครื่องใช่หรือไม่?", () => {
+                if (databaseMode === 'online') {
+                    try {
+                        redemptions.forEach(async (item) => {
+                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'redemptions', item.docId);
+                            await deleteDoc(docRef);
+                        });
+                    } catch (e) {
+                        switchToOfflineFallback();
+                    }
+                } else {
+                    redemptions = [];
+                    saveOfflineData();
+                    window.renderHistoryAdmin();
+                }
+                window.showToast("ล้างบันทึกประวัติสำเร็จแล้วค่ะ");
+            });
+        };
+
+        // --- LAYOUT NAVIGATION ---
+        window.enterAdminMode = function() {
+            const clientView = document.getElementById('client-view');
+            const adminView = document.getElementById('admin-view');
+            const toggleBtn = document.getElementById('mode-toggle-btn');
+
+            clientView.style.display = 'none';
+            adminView.style.display = 'flex';
+            toggleBtn.textContent = "CLIENT";
+            toggleBtn.style.background = "#5B9FE3";
+            toggleBtn.style.color = "white";
+        };
+
+        window.exitAdminMode = function() {
+            document.getElementById('client-view').style.display = 'flex';
+            document.getElementById('admin-view').style.display = 'none';
+            const toggleBtn = document.getElementById('mode-toggle-btn');
+            toggleBtn.textContent = "ADMIN";
+            toggleBtn.style.background = "#F0F7FF";
+            toggleBtn.style.color = "var(--dark-blue)";
+            window.showToast("สลับเข้าสู่หน้าต่างสำหรับลูกค้า 💙");
+        };
+
+        window.switchAdminTab = function(tabName) {
+            const tabMembers = document.getElementById('tab-members');
+            const tabRewards = document.getElementById('tab-rewards');
+            const tabHistory = document.getElementById('tab-history');
+
+            const secMembers = document.getElementById('admin-section-members');
+            const secRewards = document.getElementById('admin-section-rewards');
+            const secHistory = document.getElementById('admin-section-history');
+
+            tabMembers.classList.remove('active');
+            tabRewards.classList.remove('active');
+            tabHistory.classList.remove('active');
+            secMembers.classList.remove('active');
+            secRewards.classList.remove('active');
+            secHistory.classList.remove('active');
+
+            if (tabName === 'members') {
+                tabMembers.classList.add('active');
+                secMembers.classList.add('active');
+            } else if (tabName === 'rewards') {
+                tabRewards.classList.add('active');
+                secRewards.classList.add('active');
+            } else {
+                tabHistory.classList.add('active');
+                secHistory.classList.add('active');
+            }
+        };
+
+        // --- RENDERING FUNCTIONS (INTERNAL USE ONLY) ---
+        window.renderRewardsClient = function() {
             const listContainer = document.getElementById('rewards-client-list');
             listContainer.innerHTML = '';
 
@@ -1083,10 +1634,9 @@
                     </div>
                 `;
             });
-        }
+        };
 
-        // แสดงตารางจัดการสมาชิกฝั่งแอดมิน
-        function renderMembersAdmin() {
+        window.renderMembersAdmin = function() {
             const tbody = document.getElementById('members-table-body');
             tbody.innerHTML = '';
 
@@ -1106,10 +1656,9 @@
                     </tr>
                 `;
             });
-        }
+        };
 
-        // แสดงรายการของรางวัลฝั่งแอดมิน
-        function renderRewardsAdmin() {
+        window.renderRewardsAdmin = function() {
             const listContainer = document.getElementById('rewards-admin-list');
             listContainer.innerHTML = '';
 
@@ -1119,6 +1668,7 @@
             }
 
             rewards.forEach((item, index) => {
+                const docIdString = item.docId ? `'${item.docId}'` : index;
                 listContainer.innerHTML += `
                     <div class="reward-item" style="justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -1130,15 +1680,14 @@
                         </div>
                         <div style="display: flex; gap: 6px;">
                             <button class="btn btn-mini" style="background:#64B5F6; box-shadow:none;" onclick="startEditReward(${index})">✏️</button>
-                            <button class="btn btn-mini btn-danger" style="box-shadow:none;" onclick="showDeleteRewardConfirm(${index})">🗑️</button>
+                            <button class="btn btn-mini btn-danger" style="box-shadow:none;" onclick="showDeleteRewardConfirm(${docIdString})">🗑️</button>
                         </div>
                     </div>
                 `;
             });
-        }
+        };
 
-        // แสดงประวัติการแลกและสุ่มรหัสส่วนลด
-        function renderHistoryAdmin() {
+        window.renderHistoryAdmin = function() {
             const tbody = document.getElementById('history-table-body');
             tbody.innerHTML = '';
 
@@ -1147,8 +1696,9 @@
                 return;
             }
 
-            // แสดงรายการล่าสุดขึ้นก่อน (Reverse Order)
-            [...redemptions].reverse().forEach(log => {
+            const sorted = [...redemptions].sort((a, b) => b.id - a.id);
+
+            sorted.forEach(log => {
                 tbody.innerHTML += `
                     <tr>
                         <td><span class="code-badge">${log.code}</span></td>
@@ -1158,400 +1708,12 @@
                     </tr>
                 `;
             });
-        }
-
-
-        // --- 6. CLIENT ACTIONS ---
-
-        // ตรวจสอบสมาชิก
-        function checkMemberPoints() {
-            const searchIdInput = document.getElementById('search-member-id');
-            const searchId = searchIdInput.value.trim().toUpperCase();
-
-            if (!searchId) {
-                showAlert("เกิดข้อผิดพลาด", "โปรดระบุรหัสสมาชิกก่อนนะคะ 💙", "💎");
-                return;
-            }
-
-            const found = members.find(m => m.id === searchId);
-
-            if (found) {
-                activeMemberId = found.id;
-                document.getElementById('member-display-name').textContent = `ยินดีต้อนรับคุณ ${found.name} ✨`;
-                document.getElementById('member-display-points').textContent = found.points.toLocaleString();
-                document.getElementById('points-display-area').style.display = 'block';
-                showToast(`ยินดีต้อนรับค่ะ ${found.name}! ☁️`);
-            } else {
-                activeMemberId = null;
-                document.getElementById('points-display-area').style.display = 'none';
-                showAlert("ไม่พบรหัส", "ไม่พบรหัสสมาชิกนี้ในระบบคราบโปรดระบุรหัสสมาชิกให้ถูกต้อง 😢", "🔍");
-            }
-        }
-
-        // กดแลกรางวัล + แสดงหน้าจอแคปเจอร์สุ่มคูปองส่วนลด
-        function exchangeReward(pointsCost, rewardName) {
-            if (!activeMemberId) {
-                showAlert("ค้นหาเข้าสู่ระบบ", "โปรดกรอกรหัสสมาชิกและกดปุ่มค้นหาก่อนทำรายการแลกสิทธิ์นะคะ 🎟️", "🧸");
-                return;
-            }
-
-            const currentMember = members.find(m => m.id === activeMemberId);
-            if (!currentMember) return;
-
-            if (currentMember.points < pointsCost) {
-                showAlert("คะแนนไม่พอ", "คะแนนสะสมของคุณไม่เพียงพอสำหรับการแลกรับรางวัลนี้ค่ะ 😭", "☁️");
-                return;
-            }
-
-            // หักแต้ม
-            currentMember.points -= pointsCost;
-
-            // สุ่มรหัสส่วนลด
-            const generatedCode = generateRandomCouponCode();
-
-            // บันทึกเวลาแลก
-            const now = new Date();
-            const timeString = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-            // บันทึกประวัติการแลกลง LocalStorage
-            const newRedemption = {
-                id: Date.now(),
-                memberId: currentMember.id,
-                memberName: currentMember.name,
-                rewardName: rewardName,
-                pointsCost: pointsCost,
-                code: generatedCode,
-                timestamp: timeString
-            };
-            redemptions.push(newRedemption);
-            saveData();
-
-            // แสดงข้อมูลบนป๊อปอัปสลิปแคปเจอร์หน้าจอ
-            document.getElementById('modal-reward-name').textContent = rewardName;
-            document.getElementById('modal-member-info').textContent = `${currentMember.id} - ${currentMember.name}`;
-            document.getElementById('modal-coupon-code').textContent = generatedCode;
-            document.getElementById('modal-timestamp').textContent = `แลกเมื่อ: ${timeString}`;
-            document.getElementById('modal-remaining-points').textContent = `คะแนนสะสมคงเหลือของคุณ: ${currentMember.points.toLocaleString()} แต้ม`;
-
-            // อัปเดตหน้าลูกค้าและหลังบ้าน
-            document.getElementById('member-display-points').textContent = currentMember.points.toLocaleString();
-            renderRewardsClient();
-            renderMembersAdmin();
-            renderHistoryAdmin();
-
-            // เปิดหน้าต่างคูปองให้แคปเจอร์หน้าจอ
-            openRedemptionModal();
-        }
-
-        function openRedemptionModal() {
-            document.getElementById('redemption-success-modal').classList.add('show');
-        }
-
-        function closeRedemptionModal() {
-            document.getElementById('redemption-success-modal').classList.remove('show');
-            showToast("สลิปคูปองถูกยืนยันการบันทึกแล้ว 💙");
-        }
-
-
-        // --- 7. SECURITY & ACCESS CONTROL (ระบบรหัสผ่าน) ---
-
-        // ขอดำเนินการเข้าโหมดแอดมิน
-        function requestAdminAccess() {
-            const adminView = document.getElementById('admin-view');
-            // ถ้าโหมดผู้พัฒนาเปิดอยู่แล้ว ให้สามารถกดปิดสลับเป็นโหมดลูกค้าได้โดยไม่ต้องใส่รหัสผ่านอีก
-            if (adminView.style.display === 'flex') {
-                exitAdminMode();
-                return;
-            }
-            
-            // เคลียร์อินพุตเก่าและแสดงป๊อปอัปยืนยันรหัสผ่าน PIN
-            document.getElementById('admin-pin-input').value = "";
-            document.getElementById('pin-access-modal').classList.add('show');
-            document.getElementById('admin-pin-input').focus();
-        }
-
-        function closePINAccessModal() {
-            document.getElementById('pin-access-modal').classList.remove('show');
-        }
-
-        // ตรวจสอบรหัสผ่านที่ป้อนเข้ามา
-        function verifyAdminPIN() {
-            const enteredPIN = document.getElementById('admin-pin-input').value.trim();
-
-            if (enteredPIN === adminPIN) {
-                closePINAccessModal();
-                enterAdminMode();
-            } else {
-                showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านสำหรับเข้าโหมดผู้พัฒนาไม่ถูกต้อง กรุณาลองใหม่อีกครั้งค่ะ 🔒", "❌");
-                document.getElementById('admin-pin-input').value = "";
-            }
-        }
-
-        // ฟังก์ชันสั่งเปลี่ยนรหัสผ่านแอดมิน (PIN)
-        function changeAdminPIN() {
-            const currentPINInput = document.getElementById('admin-pin-current');
-            const newPINInput = document.getElementById('admin-pin-new');
-
-            const currentPIN = currentPINInput.value.trim();
-            const newPIN = newPINInput.value.trim();
-
-            if (!currentPIN || !newPIN) {
-                showAlert("ข้อมูลไม่ครบ", "กรุณาระบุรหัสผ่านเดิมและรหัสผ่านใหม่ที่ต้องการเปลี่ยนด้วยค่ะ", "🔒");
-                return;
-            }
-
-            if (currentPIN !== adminPIN) {
-                showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านปัจจุบันไม่ถูกต้อง ไม่สามารถเปลี่ยนรหัสผ่านได้ค่ะ", "❌");
-                return;
-            }
-
-            if (newPIN.length < 4) {
-                showAlert("สั้นเกินไป", "กรุณาตั้งรหัสผ่านใหม่อย่างน้อย 4 ตัวอักษรขึ้นไปค่ะ", "🔑");
-                return;
-            }
-
-            // ทำการบันทึกรหัสผ่านใหม่
-            adminPIN = newPIN;
-            saveData();
-
-            currentPINInput.value = "";
-            newPINInput.value = "";
-            showToast("เปลี่ยนรหัสผ่านโหมดผู้พัฒนาสำเร็จแล้วค่ะ! 🔒");
-        }
-
-
-        // --- 8. DEVELOPER/ADMIN MANAGEMENT ACTIONS ---
-
-        // เพิ่มสมาชิกใหม่
-        function createNewMember() {
-            const idInput = document.getElementById('new-member-id');
-            const nameInput = document.getElementById('new-member-name');
-            const pointsInput = document.getElementById('new-member-points');
-
-            const id = idInput.value.trim().toUpperCase();
-            const name = nameInput.value.trim();
-            const points = parseInt(pointsInput.value) || 0;
-
-            if (!id || !name) {
-                showAlert("กรอกข้อมูล", "กรุณากรอกรหัสสมาชิกและชื่อสมาชิกให้ครบถ้วนก่อนนะคะ 💎", "📋");
-                return;
-            }
-
-            if (members.some(m => m.id === id)) {
-                showAlert("รหัสซ้ำ", "รหัสสมาชิกนี้ถูกใช้งานในระบบแล้วค่ะ 🌟", "❌");
-                return;
-            }
-
-            members.push({ id, name, points });
-            saveData();
-
-            idInput.value = '';
-            nameInput.value = '';
-            pointsInput.value = '0';
-
-            renderMembersAdmin();
-            showToast("เพิ่มสมาชิกใหม่เข้าสู่ฐานข้อมูลแล้วค่ะ ☁️");
-
-            if (activeMemberId === id) {
-                checkMemberPoints();
-            }
-        }
-
-        // ปุ่มลดยืนยันการลบสมาชิก
-        function showDeleteMemberConfirm(id) {
-            showConfirm(`คุณมั่นใจที่จะลบรหัสสมาชิก ${id} ออกจากระบบถาวรหรือไม่?`, () => {
-                members = members.filter(m => m.id !== id);
-                saveData();
-                renderMembersAdmin();
-                showToast("ลบข้อมูลสมาชิกสำเร็จแล้วค่ะ");
-                if (activeMemberId === id) {
-                    document.getElementById('points-display-area').style.display = 'none';
-                    activeMemberId = null;
-                }
-            });
-        }
-
-        // ปรับแต่งคะแนน
-        function adjustPoints(id, amount) {
-            const member = members.find(m => m.id === id);
-            if (!member) return;
-
-            if (member.points + amount < 0) {
-                member.points = 0;
-            } else {
-                member.points += amount;
-            }
-
-            saveData();
-            renderMembersAdmin();
-
-            if (activeMemberId === id) {
-                document.getElementById('member-display-points').textContent = member.points.toLocaleString();
-            }
-            showToast(`ปรับคะแนนสมาชิก ${id} สำเร็จ!`);
-        }
-
-        // เพิ่มหรือบันทึกแก้ไขของรางวัล
-        function saveReward() {
-            const nameInput = document.getElementById('reward-name-input');
-            const pointsInput = document.getElementById('reward-points-input');
-            const iconInput = document.getElementById('reward-icon-input');
-            const editIndexInput = document.getElementById('edit-reward-index');
-
-            const name = nameInput.value.trim();
-            const points = parseInt(pointsInput.value) || 0;
-            const icon = iconInput.value.trim() || "🎁";
-
-            if (!name || points <= 0) {
-                showAlert("กรอกข้อมูลผิดพลาด", "โปรดตรวจสอบข้อมูลคูปองและระบุแต้มสะสมแลกรางวัลที่ถูกต้องด้วยค่ะ 🍬", "☁️");
-                return;
-            }
-
-            const editIndex = editIndexInput.value;
-            if (editIndex !== "") {
-                // อัปเดตข้อมูลเดิม
-                rewards[parseInt(editIndex)] = {
-                    ...rewards[parseInt(editIndex)],
-                    name,
-                    points,
-                    icon
-                };
-                showToast("อัปเดตของรางวัลสำเร็จแล้วค่ะ ✨");
-            } else {
-                // สร้างรางวัลใหม่
-                const newId = rewards.length > 0 ? Math.max(...rewards.map(r => r.id)) + 1 : 1;
-                rewards.push({ id: newId, name, points, icon });
-                showToast("เพิ่มของรางวัลชิ้นใหม่สำเร็จแล้วค่ะ 🎀");
-            }
-
-            saveData();
-            cancelRewardEdit();
-            renderRewardsAdmin();
-            renderRewardsClient();
-        }
-
-        // หน้ายืนยันเพื่อขอลบรางวัล
-        function showDeleteRewardConfirm(index) {
-            showConfirm("คุณต้องการลบรางวัลรายการนี้ออกจากฐานข้อมูลใช่หรือไม่?", () => {
-                rewards.splice(index, 1);
-                saveData();
-                renderRewardsAdmin();
-                renderRewardsClient();
-                showToast("ลบรางวัลเรียบร้อยแล้ว");
-            });
-        }
-
-        // เริ่มต้นการอัปเดตแก้ไขรางวัล
-        function startEditReward(index) {
-            const item = rewards[index];
-            document.getElementById('reward-form-title').textContent = "✏️ EDIT REWARD INFO";
-            document.getElementById('reward-name-input').value = item.name;
-            document.getElementById('reward-points-input').value = item.points;
-            document.getElementById('reward-icon-input').value = item.icon;
-            document.getElementById('edit-reward-index').value = index;
-            document.getElementById('btn-cancel-reward-edit').style.display = 'inline-flex';
-        }
-
-        // สั่งยกเลิกการแก้ไขฟอร์มของรางวัล
-        function cancelRewardEdit() {
-            document.getElementById('reward-form-title').textContent = "➕ ADD NEW REWARD";
-            document.getElementById('reward-name-input').value = '';
-            document.getElementById('reward-points-input').value = '';
-            document.getElementById('reward-icon-input').value = '';
-            document.getElementById('edit-reward-index').value = '';
-            document.getElementById('btn-cancel-reward-edit').style.display = 'none';
-        }
-
-        // เคลียร์ล้างประวัติส่วนลดแลกของหลังบ้านทั้งหมด
-        function showClearHistoryConfirm() {
-            if (redemptions.length === 0) {
-                showAlert("ประวัติว่าง", "ไม่มีประวัติการแลกส่วนลดค้างในระบบอยู่แล้วค่ะ 💎", "🧸");
-                return;
-            }
-            showConfirm("คุณต้องการล้างประวัติข้อมูลการแลกรับสิทธิ์ทั้งหมดหลังบ้านใช่หรือไม่? (การแลกแต้มของลูกค้าก่อนหน้าจะไม่ได้รับผลกระทบ)", () => {
-                redemptions = [];
-                saveData();
-                renderHistoryAdmin();
-                showToast("ล้างบันทึกประวัติสำเร็จแล้วค่ะ");
-            });
-        }
-
-
-        // --- 9. PAGE NAVIGATION VIEW CONTROL ---
-
-        // เข้าสู่โหมดผู้พัฒนาแบบทางการ (หลังตรวจสอบรหัส PIN สำเร็จแล้ว)
-        function enterAdminMode() {
-            const clientView = document.getElementById('client-view');
-            const adminView = document.getElementById('admin-view');
-            const toggleBtn = document.getElementById('mode-toggle-btn');
-
-            clientView.style.display = 'none';
-            adminView.style.display = 'flex';
-            toggleBtn.textContent = "CLIENT";
-            toggleBtn.style.background = "#5B9FE3";
-            toggleBtn.style.color = "white";
-            
-            // โหลดและเชื่อมฐานข้อมูล
-            renderMembersAdmin();
-            renderRewardsAdmin();
-            renderHistoryAdmin();
-            showToast("เข้าสู่ระบบจัดการของผู้พัฒนาเรียบร้อยค่ะ 🛠️");
-        }
-
-        // ยกเลิกออกจากระบบแอดมิน
-        function exitAdminMode() {
-            document.getElementById('client-view').style.display = 'flex';
-            document.getElementById('admin-view').style.display = 'none';
-            const toggleBtn = document.getElementById('mode-toggle-btn');
-            toggleBtn.textContent = "ADMIN";
-            toggleBtn.style.background = "#F0F7FF";
-            toggleBtn.style.color = "var(--dark-blue)";
-            showToast("สลับเข้าสู่หน้าต่างสำหรับลูกค้า 💙");
-        }
-
-        // ควบคุมสวิตช์แท็บหลังบ้านของแอดมิน
-        function switchAdminTab(tabName) {
-            const tabMembers = document.getElementById('tab-members');
-            const tabRewards = document.getElementById('tab-rewards');
-            const tabHistory = document.getElementById('tab-history');
-
-            const secMembers = document.getElementById('admin-section-members');
-            const secRewards = document.getElementById('admin-section-rewards');
-            const secHistory = document.getElementById('admin-section-history');
-
-            // ลบการทำงานแอคทีฟทั้งหมด
-            tabMembers.classList.remove('active');
-            tabRewards.classList.remove('active');
-            tabHistory.classList.remove('active');
-            secMembers.classList.remove('active');
-            secRewards.classList.remove('active');
-            secHistory.classList.remove('active');
-
-            if (tabName === 'members') {
-                tabMembers.classList.add('active');
-                secMembers.classList.add('active');
-            } else if (tabName === 'rewards') {
-                tabRewards.classList.add('active');
-                secRewards.classList.add('active');
-            } else {
-                tabHistory.classList.add('active');
-                secHistory.classList.add('active');
-                renderHistoryAdmin(); // ดึงอัปเดตประวัติการแลกล่าสุด
-            }
-        }
-
-
-        // --- 10. APP INITIALIZATION ---
-        window.onload = function() {
-            renderRewardsClient();
-            
-            // ดักฟังก์ชันปุ่ม Enter สำหรับการกรอกรหัส PIN คีย์บอร์ด
-            document.getElementById('admin-pin-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    verifyAdminPIN();
-                }
-            });
         };
+
+        // สตาร์ทระบบทั้งหมดเมื่อโครงสร้าง DOM ทำงานเรียบร้อย
+        window.addEventListener('DOMContentLoaded', () => {
+            initAppSystem();
+        });
 
     </script>
 </body>
