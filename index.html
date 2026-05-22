@@ -11,6 +11,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500&family=Mitr:wght@200;300;400&display=swap" rel="stylesheet">
     
+    <!-- Firebase Compat SDK (แก้ไขเรื่องขอบเขตฟังก์ชันทับซ้อน เพื่อให้ปุ่มคลิกใน HTML ทำงานได้อย่างสมบูรณ์แบบ) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         /* --- CSS VARIABLES (โทนสีฟ้าพาสเทลหิมะ Yukishiro) --- */
         :root {
@@ -99,7 +104,6 @@
             animation: floatBubble infinite ease-in-out;
         }
 
-        /* ฟองขนาดต่างๆ พร้อมสุ่มตำแหน่ง */
         .bubble:nth-child(1) { width: 80px; height: 80px; left: 5%; bottom: -100px; animation-duration: 18s; animation-delay: 0s; }
         .bubble:nth-child(2) { width: 120px; height: 120px; left: 80%; bottom: -120px; animation-duration: 22s; animation-delay: 2s; }
         .bubble:nth-child(3) { width: 50px; height: 50px; left: 40%; bottom: -60px; animation-duration: 14s; animation-delay: 4s; }
@@ -947,11 +951,7 @@
 
 
     <!-- ================= JAVASCRIPT & FIREBASE CONNECTIVITY ================= -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <script>
         // Firebase Configuration ที่คุณกำหนดมา
         const firebaseConfig = {
             apiKey: "AIzaSyDoCeEQpZSlO-BedWeplzKDXrT3F3Q24AY",
@@ -988,44 +988,49 @@
         let confirmActionCallback = null;
 
         // ฟังก์ชันเริ่มการทำงานของแอปแบบ Hybrid เพื่อไม่ให้หน้าจอค้างเด็ดขาด
-        const initAppSystem = async () => {
+        function initAppSystem() {
             const loaderText = document.getElementById('loader-text');
             const statusBadge = document.getElementById('database-status-badge');
             
+            loaderText.textContent = "CONNECTING TO CLOUD DATABASE...";
+            
+            // ทดสอบเชื่อมต่อคลาวด์จริง โดยกำหนดเวลา Timeout ไว้ที่ 4 วินาที
+            let hasLoaded = false;
+            
             try {
-                loaderText.textContent = "CONNECTING TO CLOUD DATABASE...";
+                app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
                 
-                // ทดสอบเชื่อมต่อคลาวด์จริง โดยกำหนดเวลา Timeout ไว้ที่ 4 วินาที
-                const connectionPromise = new Promise(async (resolve, reject) => {
-                    try {
-                        app = initializeApp(firebaseConfig);
-                        auth = getAuth(app);
-                        db = getFirestore(app);
-                        
-                        await signInAnonymously(auth);
-                        resolve(true);
-                    } catch (e) {
-                        reject(e);
-                    }
+                auth.signInAnonymously().then(() => {
+                    databaseMode = 'online';
+                    statusBadge.innerHTML = "🟢 คลาวด์ออนไลน์ (Firebase Firestore)";
+                    statusBadge.style.background = "#D1FAE5";
+                    statusBadge.style.color = "#065F46";
+                    hasLoaded = true;
+                    listenToCloudData();
+                }).catch((error) => {
+                    console.warn("Auth failed, using offline fallback.", error);
+                    fallbackToOffline();
                 });
 
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000));
-                
-                await Promise.race([connectionPromise, timeoutPromise]);
-                
-                // หากเชื่อมต่อได้และอนุญาตสิทธิ์สำเร็จ
-                databaseMode = 'online';
-                statusBadge.innerHTML = "🟢 คลาวด์ออนไลน์ (Firebase Firestore)";
-                statusBadge.style.background = "#D1FAE5";
-                statusBadge.style.color = "#065F46";
-                
-                listenToCloudData();
-
             } catch (error) {
-                console.warn("ไม่สามารถเชื่อมต่อคลาวด์ตรงได้ กำลังสลับไปใช้ระบบจัดเก็บในอุปกรณ์ชั่วคราว:", error);
-                
-                // ย้ายฐานข้อมูลลง LocalStorage อัตโนมัติเพื่อให้พร้อมใช้ทันทีที่ร้าน
+                console.warn("Firebase Init failed, using offline fallback:", error);
+                fallbackToOffline();
+            }
+
+            // ตั้งระบบความปลอดภัยไม่ให้หน้าจอโหลดค้างนานเกิน 4 วินาที
+            setTimeout(() => {
+                if (!hasLoaded) {
+                    fallbackToOffline();
+                }
+            }, 4000);
+        }
+
+        function fallbackToOffline() {
+            if (databaseMode !== 'online') {
                 databaseMode = 'offline';
+                const statusBadge = document.getElementById('database-status-badge');
                 statusBadge.innerHTML = "🟡 ออฟไลน์โหมด (จัดเก็บในเครื่องนี้ชั่วคราว)";
                 statusBadge.style.background = "#FEF3C7";
                 statusBadge.style.color = "#92400E";
@@ -1033,24 +1038,26 @@
                 loadOfflineData();
                 hideCloudLoader();
             }
-        };
+        }
 
         // --- 1. CLOUD SYNCHRONIZER (ดึงข้อมูลคลาวด์เรียลไทม์) ---
-        const listenToCloudData = () => {
-            // ดึงพาธคลาวด์ตาม Rule 1 ของระบบสิ่งแวดล้อมจำกัดอย่างถูกต้อง
-            const membersRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
-            const rewardsRef = collection(db, 'artifacts', appId, 'public', 'data', 'rewards');
-            const redemptionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'redemptions');
-            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'security');
+        function listenToCloudData() {
+            // พาธคลาวด์ตาม Rule 1 ของสภาพแวดล้อม
+            const membersRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('members');
+            const rewardsRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('rewards');
+            const redemptionsRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('redemptions');
+            const configRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('config').doc('security');
 
-            onSnapshot(membersRef, (snapshot) => {
+            membersRef.onSnapshot((snapshot) => {
                 const fetched = [];
-                snapshot.forEach(doc => fetched.push(doc.data()));
+                snapshot.forEach(doc => {
+                    fetched.push(doc.data());
+                });
                 members = fetched;
 
                 if (members.length === 0) {
-                    defaultMembers.forEach(async (m) => {
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', m.id), m);
+                    defaultMembers.forEach((m) => {
+                        membersRef.doc(m.id).set(m);
                     });
                 }
                 
@@ -1061,14 +1068,14 @@
                     }
                 }
 
-                window.renderMembersAdmin();
+                renderMembersAdmin();
                 hideCloudLoader();
             }, (err) => {
-                console.error("Firestore permission denied. Switching to offline backup.", err);
+                console.error("Firestore error on members. Fallback.", err);
                 switchToOfflineFallback();
             });
 
-            onSnapshot(rewardsRef, (snapshot) => {
+            rewardsRef.onSnapshot((snapshot) => {
                 const fetched = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
@@ -1078,16 +1085,16 @@
                 rewards = fetched;
 
                 if (rewards.length === 0) {
-                    defaultRewards.forEach(async (r) => {
-                        await addDoc(rewardsRef, r);
+                    defaultRewards.forEach((r) => {
+                        rewardsRef.add(r);
                     });
                 }
 
-                window.renderRewardsClient();
-                window.renderRewardsAdmin();
+                renderRewardsClient();
+                renderRewardsAdmin();
             });
 
-            onSnapshot(redemptionsRef, (snapshot) => {
+            redemptionsRef.onSnapshot((snapshot) => {
                 const fetched = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
@@ -1095,40 +1102,40 @@
                     fetched.push(data);
                 });
                 redemptions = fetched;
-                window.renderHistoryAdmin();
+                renderHistoryAdmin();
             });
 
-            onSnapshot(configRef, (docSnap) => {
-                if (docSnap.exists()) {
+            configRef.onSnapshot((docSnap) => {
+                if (docSnap.exists) {
                     adminPIN = docSnap.data().adminPIN || "1234";
                 } else {
-                    setDoc(configRef, { adminPIN: "1234" });
+                    configRef.set({ adminPIN: "1234" });
                 }
             });
-        };
+        }
 
         // --- 2. LOCALSTORAGE FALLBACK (กรณีไม่มีเน็ต หรือ Firebase ติดสิทธิ์) ---
-        const loadOfflineData = () => {
+        function loadOfflineData() {
             members = JSON.parse(localStorage.getItem('ys_members')) || defaultMembers;
             rewards = JSON.parse(localStorage.getItem('ys_rewards')) || defaultRewards;
             redemptions = JSON.parse(localStorage.getItem('ys_redemptions')) || [];
             adminPIN = localStorage.getItem('ys_admin_pin') || "1234";
 
             saveOfflineData();
-            window.renderRewardsClient();
-            window.renderRewardsAdmin();
-            window.renderMembersAdmin();
-            window.renderHistoryAdmin();
-        };
+            renderRewardsClient();
+            renderRewardsAdmin();
+            renderMembersAdmin();
+            renderHistoryAdmin();
+        }
 
-        const saveOfflineData = () => {
+        function saveOfflineData() {
             localStorage.setItem('ys_members', JSON.stringify(members));
             localStorage.setItem('ys_rewards', JSON.stringify(rewards));
             localStorage.setItem('ys_redemptions', JSON.stringify(redemptions));
             localStorage.setItem('ys_admin_pin', adminPIN);
-        };
+        }
 
-        const switchToOfflineFallback = () => {
+        function switchToOfflineFallback() {
             if (databaseMode === 'online') {
                 databaseMode = 'offline';
                 const statusBadge = document.getElementById('database-status-badge');
@@ -1138,7 +1145,7 @@
                 loadOfflineData();
                 hideCloudLoader();
             }
-        };
+        }
 
         function hideCloudLoader() {
             const loader = document.getElementById('sync-loader');
@@ -1148,43 +1155,43 @@
             }
         }
 
-        // --- EXPORT FUNCTIONS TO GLOBAL WINDOW FOR INLINE HTML ONCLICK ---
-        window.showToast = function(message) {
+        // --- GLOBAL ACTIONS ---
+        function showToast(message) {
             const toast = document.getElementById('toast-notify');
             toast.textContent = message;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
-        };
+        }
 
-        window.showAlert = function(title, message, icon = "❄️") {
+        function showAlert(title, message, icon = "❄️") {
             document.getElementById('alert-title').textContent = title;
             document.getElementById('alert-message').textContent = message;
             document.getElementById('alert-icon').textContent = icon;
             document.getElementById('alert-modal').classList.add('show');
-        };
+        }
 
-        window.closeAlertModal = function() {
+        function closeAlertModal() {
             document.getElementById('alert-modal').classList.remove('show');
-        };
+        }
 
-        window.showConfirm = function(message, callback) {
+        function showConfirm(message, callback) {
             document.getElementById('confirm-message').textContent = message;
             confirmActionCallback = callback;
             document.getElementById('confirm-modal').classList.add('show');
-        };
+        }
 
-        window.closeConfirmModal = function() {
+        function closeConfirmModal() {
             document.getElementById('confirm-modal').classList.remove('show');
             confirmActionCallback = null;
-        };
+        }
 
-        // --- CLIENT ACTIONS ---
-        window.checkMemberPoints = function() {
+        // --- CLIENT POINT CHECKS & EXCHANGE ---
+        function checkMemberPoints() {
             const searchIdInput = document.getElementById('search-member-id');
             const searchId = searchIdInput.value.trim().toUpperCase();
 
             if (!searchId) {
-                window.showAlert("เกิดข้อผิดพลาด", "โปรดระบุรหัสสมาชิกก่อนนะคะ 💙", "💎");
+                showAlert("เกิดข้อผิดพลาด", "โปรดระบุรหัสสมาชิกก่อนนะคะ 💙", "💎");
                 return;
             }
 
@@ -1195,17 +1202,17 @@
                 document.getElementById('member-display-name').textContent = `ยินดีต้อนรับคุณ ${found.name} ✨`;
                 document.getElementById('member-display-points').textContent = found.points.toLocaleString();
                 document.getElementById('points-display-area').style.display = 'block';
-                window.showToast(`ยินดีต้อนรับค่ะ ${found.name}! ☁️`);
+                showToast(`ยินดีต้อนรับค่ะ ${found.name}! ☁️`);
             } else {
                 activeMemberId = null;
                 document.getElementById('points-display-area').style.display = 'none';
-                window.showAlert("ไม่พบรหัส", "ไม่พบรหัสสมาชิกนี้ในระบบค่ะ โปรดระบุรหัสสมาชิกให้ถูกต้อง 😢", "🔍");
+                showAlert("ไม่พบรหัส", "ไม่พบรหัสสมาชิกนี้ในระบบค่ะ โปรดระบุรหัสสมาชิกให้ถูกต้อง 😢", "🔍");
             }
-        };
+        }
 
-        window.exchangeReward = async function(pointsCost, rewardName) {
+        function exchangeReward(pointsCost, rewardName) {
             if (!activeMemberId) {
-                window.showAlert("ค้นหาเข้าสู่ระบบ", "โปรดกรอกรหัสสมาชิกและกดปุ่มค้นหาก่อนทำรายการแลกสิทธิ์นะคะ 🎟️", "🧸");
+                showAlert("ค้นหาเข้าสู่ระบบ", "โปรดกรอกรหัสสมาชิกและกดปุ่มค้นหาก่อนทำรายการแลกสิทธิ์นะคะ 🎟️", "🧸");
                 return;
             }
 
@@ -1213,7 +1220,7 @@
             if (!currentMember) return;
 
             if (currentMember.points < pointsCost) {
-                window.showAlert("คะแนนไม่พอ", "คะแนนสะสมของคุณไม่เพียงพอสำหรับการแลกรับรางวัลนี้ค่ะ 😭", "☁️");
+                showAlert("คะแนนไม่พอ", "คะแนนสะสมของคุณไม่เพียงพอสำหรับการแลกรับรางวัลนี้ค่ะ 😭", "☁️");
                 return;
             }
 
@@ -1240,27 +1247,23 @@
             };
 
             if (databaseMode === 'online') {
-                try {
-                    const memberDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', currentMember.id);
-                    await updateDoc(memberDocRef, { points: nextPoints });
-
-                    const redemptionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'redemptions');
-                    await addDoc(redemptionsRef, redemptionData);
-                } catch (e) {
+                const memberDocRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('members').doc(currentMember.id);
+                memberDocRef.update({ points: nextPoints }).then(() => {
+                    const redemptionsRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('redemptions');
+                    redemptionsRef.add(redemptionData);
+                }).catch((e) => {
                     console.error("Firestore update failed, falling back to local edit:", e);
                     switchToOfflineFallback();
-                }
-            } 
-            
-            if (databaseMode === 'offline') {
+                });
+            } else {
                 currentMember.points = nextPoints;
                 redemptions.push(redemptionData);
                 saveOfflineData();
                 
                 document.getElementById('member-display-points').textContent = nextPoints.toLocaleString();
-                window.renderRewardsClient();
-                window.renderMembersAdmin();
-                window.renderHistoryAdmin();
+                renderRewardsClient();
+                renderMembersAdmin();
+                renderHistoryAdmin();
             }
 
             document.getElementById('modal-reward-name').textContent = rewardName;
@@ -1269,20 +1272,20 @@
             document.getElementById('modal-timestamp').textContent = `แลกเมื่อ: ${timeString}`;
             document.getElementById('modal-remaining-points').textContent = `คะแนนสะสมคงเหลือของคุณ: ${nextPoints.toLocaleString()} แต้ม`;
 
-            window.openRedemptionModal();
-        };
+            openRedemptionModal();
+        }
 
-        window.openRedemptionModal = function() {
+        function openRedemptionModal() {
             document.getElementById('redemption-success-modal').classList.add('show');
-        };
+        }
 
-        window.closeRedemptionModal = function() {
+        function closeRedemptionModal() {
             document.getElementById('redemption-success-modal').classList.remove('show');
-            window.showToast("สลิปคูปองถูกยืนยันการบันทึกแล้ว 💙");
-        };
+            showToast("สลิปคูปองถูกยืนยันการบันทึกแล้ว 💙");
+        }
 
         // --- SECURITY CONTROLS ---
-        window.requestAdminAccess = function() {
+        function requestAdminAccess() {
             const adminView = document.getElementById('admin-view');
             if (adminView.style.display === 'flex') {
                 exitAdminMode();
@@ -1291,25 +1294,25 @@
             document.getElementById('admin-pin-input').value = "";
             document.getElementById('pin-access-modal').classList.add('show');
             document.getElementById('admin-pin-input').focus();
-        };
+        }
 
-        window.closePINAccessModal = function() {
+        function closePINAccessModal() {
             document.getElementById('pin-access-modal').classList.remove('show');
-        };
+        }
 
-        window.verifyAdminPIN = function() {
+        function verifyAdminPIN() {
             const enteredPIN = document.getElementById('admin-pin-input').value.trim();
 
             if (enteredPIN === adminPIN) {
                 closePINAccessModal();
                 enterAdminMode();
             } else {
-                window.showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านสำหรับเข้าโหมดผู้พัฒนาไม่ถูกต้อง กรุณาลองใหม่อีกครั้งค่ะ 🔒", "❌");
+                showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านสำหรับเข้าโหมดผู้พัฒนาไม่ถูกต้อง กรุณาลองใหม่อีกครั้งค่ะ 🔒", "❌");
                 document.getElementById('admin-pin-input').value = "";
             }
-        };
+        }
 
-        window.changeAdminPIN = async function() {
+        function changeAdminPIN() {
             const currentPINInput = document.getElementById('admin-pin-current');
             const newPINInput = document.getElementById('admin-pin-new');
 
@@ -1317,40 +1320,38 @@
             const newPIN = newPINInput.value.trim();
 
             if (!currentPIN || !newPIN) {
-                window.showAlert("ข้อมูลไม่ครบ", "กรุณาระบุรหัสผ่านเดิมและรหัสผ่านใหม่ที่ต้องการเปลี่ยนด้วยค่ะ", "🔒");
+                showAlert("ข้อมูลไม่ครบ", "กรุณาระบุรหัสผ่านเดิมและรหัสผ่านใหม่ที่ต้องการเปลี่ยนด้วยค่ะ", "🔒");
                 return;
             }
 
             if (currentPIN !== adminPIN) {
-                window.showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านปัจจุบันไม่ถูกต้อง ไม่สามารถเปลี่ยนรหัสผ่านได้ค่ะ", "❌");
+                showAlert("รหัสผ่านไม่ถูกต้อง", "รหัสผ่านปัจจุบันไม่ถูกต้อง ไม่สามารถเปลี่ยนรหัสผ่านได้ค่ะ", "❌");
                 return;
             }
 
             if (newPIN.length < 4) {
-                window.showAlert("สั้นเกินไป", "กรุณาตั้งรหัสผ่านใหม่อย่างน้อย 4 ตัวอักษรขึ้นไปค่ะ", "🔑");
+                showAlert("สั้นเกินไป", "กรุณาตั้งรหัสผ่านใหม่อย่างน้อย 4 ตัวอักษรขึ้นไปค่ะ", "🔑");
                 return;
             }
 
             adminPIN = newPIN;
 
             if (databaseMode === 'online') {
-                try {
-                    const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'security');
-                    await setDoc(configRef, { adminPIN: newPIN });
-                } catch (e) {
+                const configRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('config').doc('security');
+                configRef.set({ adminPIN: newPIN }).catch(() => {
                     switchToOfflineFallback();
-                }
+                });
             } else {
                 saveOfflineData();
             }
 
             currentPINInput.value = "";
             newPINInput.value = "";
-            window.showToast("เปลี่ยนรหัสผ่านโหมดผู้พัฒนาสำเร็จแล้วค่ะ! 🔒");
-        };
+            showToast("เปลี่ยนรหัสผ่านโหมดผู้พัฒนาสำเร็จแล้วค่ะ! 🔒");
+        }
 
         // --- DEVELOPER ACTIONS ---
-        window.createNewMember = async function() {
+        function createNewMember() {
             const idInput = document.getElementById('new-member-id');
             const nameInput = document.getElementById('new-member-name');
             const pointsInput = document.getElementById('new-member-points');
@@ -1360,65 +1361,61 @@
             const points = parseInt(pointsInput.value) || 0;
 
             if (!id || !name) {
-                window.showAlert("กรอกข้อมูล", "กรุณากรอกรหัสสมาชิกและชื่อสมาชิกให้ครบถ้วนก่อนนะคะ 💎", "📋");
+                showAlert("กรอกข้อมูล", "กรุณากรอกรหัสสมาชิกและชื่อสมาชิกให้ครบถ้วนก่อนนะคะ 💎", "📋");
                 return;
             }
 
             if (members.some(m => m.id === id)) {
-                window.showAlert("รหัสซ้ำ", "รหัสสมาชิกนี้ถูกใช้งานในระบบแล้วค่ะ 🌟", "❌");
+                showAlert("รหัสซ้ำ", "รหัสสมาชิกนี้ถูกใช้งานในระบบแล้วค่ะ 🌟", "❌");
                 return;
             }
 
             const memberData = { id, name, points };
 
             if (databaseMode === 'online') {
-                try {
-                    const memberDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', id);
-                    await setDoc(memberDocRef, memberData);
-                } catch (e) {
+                const memberDocRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('members').doc(id);
+                memberDocRef.set(memberData).catch(() => {
                     switchToOfflineFallback();
-                }
+                });
             } else {
                 members.push(memberData);
                 saveOfflineData();
-                window.renderMembersAdmin();
+                renderMembersAdmin();
             }
 
             idInput.value = '';
             nameInput.value = '';
             pointsInput.value = '0';
 
-            window.showToast("เพิ่มสมาชิกใหม่เข้าสู่ระบบออนไลน์แล้วค่ะ ☁️");
+            showToast("เพิ่มสมาชิกใหม่เข้าสู่ระบบออนไลน์แล้วค่ะ ☁️");
             
             if (activeMemberId === id) {
-                window.checkMemberPoints();
+                checkMemberPoints();
             }
-        };
+        }
 
-        window.showDeleteMemberConfirm = function(id) {
-            window.showConfirm(`คุณมั่นใจที่จะลบรหัสสมาชิก ${id} ออกจากระบบถาวรหรือไม่?`, async () => {
+        function showDeleteMemberConfirm(id) {
+            showConfirm(`คุณมั่นใจที่จะลบรหัสสมาชิก ${id} ออกจากระบบถาวรหรือไม่?`, () => {
                 if (databaseMode === 'online') {
-                    try {
-                        const memberDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', id);
-                        await deleteDoc(memberDocRef);
-                    } catch (e) {
+                    const memberDocRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('members').doc(id);
+                    memberDocRef.delete().catch(() => {
                         switchToOfflineFallback();
-                    }
+                    });
                 } else {
                     members = members.filter(m => m.id !== id);
                     saveOfflineData();
-                    window.renderMembersAdmin();
+                    renderMembersAdmin();
                 }
                 
-                window.showToast("ลบข้อมูลสมาชิกสำเร็จแล้วค่ะ");
+                showToast("ลบข้อมูลสมาชิกสำเร็จแล้วค่ะ");
                 if (activeMemberId === id) {
                     document.getElementById('points-display-area').style.display = 'none';
                     activeMemberId = null;
                 }
             });
-        };
+        }
 
-        window.adjustPoints = async function(id, amount) {
+        function adjustPoints(id, amount) {
             const member = members.find(m => m.id === id);
             if (!member) return;
 
@@ -1426,25 +1423,23 @@
             if (nextPoints < 0) nextPoints = 0;
 
             if (databaseMode === 'online') {
-                try {
-                    const memberDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', id);
-                    await updateDoc(memberDocRef, { points: nextPoints });
-                } catch (e) {
+                const memberDocRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('members').doc(id);
+                memberDocRef.update({ points: nextPoints }).catch(() => {
                     switchToOfflineFallback();
-                }
+                });
             } else {
                 member.points = nextPoints;
                 saveOfflineData();
-                window.renderMembersAdmin();
+                renderMembersAdmin();
             }
             
             if (activeMemberId === id) {
                 document.getElementById('member-display-points').textContent = nextPoints.toLocaleString();
             }
-            window.showToast(`ปรับคะแนนสมาชิก ${id} สำเร็จ!`);
-        };
+            showToast(`ปรับคะแนนสมาชิก ${id} สำเร็จ!`);
+        }
 
-        window.saveReward = async function() {
+        function saveReward() {
             const nameInput = document.getElementById('reward-name-input');
             const pointsInput = document.getElementById('reward-points-input');
             const iconInput = document.getElementById('reward-icon-input');
@@ -1455,54 +1450,55 @@
             const icon = iconInput.value.trim() || "🎁";
 
             if (!name || points <= 0) {
-                window.showAlert("กรอกข้อมูลผิดพลาด", "โปรดตรวจสอบข้อมูลคูปองและระบุแต้มสะสมแลกรางวัลที่ถูกต้องด้วยค่ะ 🍬", "☁️");
+                showAlert("กรอกข้อมูลผิดพลาด", "โปรดตรวจสอบข้อมูลคูปองและระบุแต้มสะสมแลกรางวัลที่ถูกต้องด้วยค่ะ 🍬", "☁️");
                 return;
             }
 
             const editIndex = editIndexInput.value;
 
             if (databaseMode === 'online') {
-                try {
-                    if (editIndex !== "") {
-                        const targetDocId = rewards[parseInt(editIndex)].docId;
-                        const rewardDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rewards', targetDocId);
-                        await updateDoc(rewardDocRef, { name, points, icon });
-                        window.showToast("อัปเดตของรางวัลสำเร็จแล้วค่ะ ✨");
-                    } else {
-                        const rewardsRef = collection(db, 'artifacts', appId, 'public', 'data', 'rewards');
-                        const newId = rewards.length > 0 ? Math.max(...rewards.map(r => r.id)) + 1 : 1;
-                        await addDoc(rewardsRef, { id: newId, name, points, icon });
-                        window.showToast("เพิ่มของรางวัลชิ้นใหม่สำเร็จแล้วค่ะ 🎀");
-                    }
-                } catch (e) {
-                    switchToOfflineFallback();
+                const rewardsRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('rewards');
+                if (editIndex !== "") {
+                    const targetDocId = rewards[parseInt(editIndex)].docId;
+                    rewardsRef.doc(targetDocId).update({ name, points, icon }).then(() => {
+                        showToast("อัปเดตของรางวัลสำเร็จแล้วค่ะ ✨");
+                    }).catch(() => {
+                        switchToOfflineFallback();
+                    });
+                } else {
+                    const newId = rewards.length > 0 ? Math.max(...rewards.map(r => r.id)) + 1 : 1;
+                    rewardsRef.add({ id: newId, name, points, icon }).then(() => {
+                        showToast("เพิ่มของรางวัลชิ้นใหม่สำเร็จแล้วค่ะ 🎀");
+                    }).catch(() => {
+                        switchToOfflineFallback();
+                    });
                 }
             } else {
                 if (editIndex !== "") {
                     rewards[parseInt(editIndex)] = { ...rewards[parseInt(editIndex)], name, points, icon };
-                    window.showToast("อัปเดตของรางวัลสำเร็จแล้วค่ะ ✨");
+                    showToast("อัปเดตของรางวัลสำเร็จแล้วค่ะ ✨");
                 } else {
                     const newId = rewards.length > 0 ? Math.max(...rewards.map(r => r.id)) + 1 : 1;
                     rewards.push({ id: newId, name, points, icon });
-                    window.showToast("เพิ่มของรางวัลชิ้นใหม่สำเร็จแล้วค่ะ 🎀");
+                    showToast("เพิ่มของรางวัลชิ้นใหม่สำเร็จแล้วค่ะ 🎀");
                 }
                 saveOfflineData();
-                window.renderRewardsClient();
-                window.renderRewardsAdmin();
+                renderRewardsClient();
+                renderRewardsAdmin();
             }
 
-            window.cancelRewardEdit();
-        };
+            cancelRewardEdit();
+        }
 
-        window.showDeleteRewardConfirm = function(docIdOrIndex) {
-            window.showConfirm("คุณต้องการลบรางวัลรายการนี้ออกจากฐานข้อมูลใช่หรือไม่?", async () => {
+        function showDeleteRewardConfirm(docIdOrIndex) {
+            showConfirm("คุณต้องการลบรางวัลรายการนี้ออกจากฐานข้อมูลใช่หรือไม่?", () => {
                 if (databaseMode === 'online') {
-                    try {
-                        const rewardDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rewards', docIdOrIndex);
-                        await deleteDoc(rewardDocRef);
-                    } catch (e) {
+                    const rewardDocRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('rewards').doc(docIdOrIndex);
+                    rewardDocRef.delete().then(() => {
+                        showToast("ลบรางวัลเรียบร้อยแล้ว");
+                    }).catch(() => {
                         switchToOfflineFallback();
-                    }
+                    });
                 } else {
                     const index = rewards.findIndex(r => r.id.toString() === docIdOrIndex || r.docId === docIdOrIndex);
                     if (index !== -1) {
@@ -1511,14 +1507,14 @@
                         rewards.splice(parseInt(docIdOrIndex), 1);
                     }
                     saveOfflineData();
-                    window.renderRewardsClient();
-                    window.renderRewardsAdmin();
+                    renderRewardsClient();
+                    renderRewardsAdmin();
+                    showToast("ลบรางวัลเรียบร้อยแล้ว");
                 }
-                window.showToast("ลบรางวัลเรียบร้อยแล้ว");
             });
-        };
+        }
 
-        window.startEditReward = function(index) {
+        function startEditReward(index) {
             const item = rewards[index];
             document.getElementById('reward-form-title').innerHTML = "✏️&nbsp; EDIT REWARD INFO";
             document.getElementById('reward-name-input').value = item.name;
@@ -1526,43 +1522,42 @@
             document.getElementById('reward-icon-input').value = item.icon;
             document.getElementById('edit-reward-index').value = index;
             document.getElementById('btn-cancel-reward-edit').style.display = 'inline-flex';
-        };
+        }
 
-        window.cancelRewardEdit = function() {
+        function cancelRewardEdit() {
             document.getElementById('reward-form-title').textContent = "➕ ADD NEW REWARD";
             document.getElementById('reward-name-input').value = '';
             document.getElementById('reward-points-input').value = '';
             document.getElementById('reward-icon-input').value = '';
             document.getElementById('edit-reward-index').value = '';
             document.getElementById('btn-cancel-reward-edit').style.display = 'none';
-        };
+        }
 
-        window.showClearHistoryConfirm = function() {
+        function showClearHistoryConfirm() {
             if (redemptions.length === 0) {
-                window.showAlert("ประวัติว่าง", "ไม่มีประวัติการแลกส่วนลดค้างในระบบอยู่แล้วค่ะ 💎", "🧸");
+                showAlert("ประวัติว่าง", "ไม่มีประวัติการแลกส่วนลดค้างในระบบอยู่แล้วค่ะ 💎", "🧸");
                 return;
             }
-            window.showConfirm("คุณต้องการล้างประวัติข้อมูลคูปองแลกทั้งหมดบนระบบคลาวด์/เครื่องใช่หรือไม่?", () => {
+            showConfirm("คุณต้องการล้างประวัติข้อมูลคูปองแลกทั้งหมดบนระบบคลาวด์/เครื่องใช่หรือไม่?", () => {
                 if (databaseMode === 'online') {
-                    try {
-                        redemptions.forEach(async (item) => {
-                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'redemptions', item.docId);
-                            await deleteDoc(docRef);
+                    const redemptionsRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('redemptions');
+                    redemptions.forEach((item) => {
+                        redemptionsRef.doc(item.docId).delete().catch(() => {
+                            switchToOfflineFallback();
                         });
-                    } catch (e) {
-                        switchToOfflineFallback();
-                    }
+                    });
+                    showToast("ล้างบันทึกประวัติบนระบบออนไลน์สำเร็จแล้วค่ะ");
                 } else {
                     redemptions = [];
                     saveOfflineData();
-                    window.renderHistoryAdmin();
+                    renderHistoryAdmin();
+                    showToast("ล้างบันทึกประวัติสำเร็จแล้วค่ะ");
                 }
-                window.showToast("ล้างบันทึกประวัติสำเร็จแล้วค่ะ");
             });
-        };
+        }
 
         // --- LAYOUT NAVIGATION ---
-        window.enterAdminMode = function() {
+        function enterAdminMode() {
             const clientView = document.getElementById('client-view');
             const adminView = document.getElementById('admin-view');
             const toggleBtn = document.getElementById('mode-toggle-btn');
@@ -1572,19 +1567,19 @@
             toggleBtn.textContent = "CLIENT";
             toggleBtn.style.background = "#5B9FE3";
             toggleBtn.style.color = "white";
-        };
+        }
 
-        window.exitAdminMode = function() {
+        function exitAdminMode() {
             document.getElementById('client-view').style.display = 'flex';
             document.getElementById('admin-view').style.display = 'none';
             const toggleBtn = document.getElementById('mode-toggle-btn');
             toggleBtn.textContent = "ADMIN";
             toggleBtn.style.background = "#F0F7FF";
             toggleBtn.style.color = "var(--dark-blue)";
-            window.showToast("สลับเข้าสู่หน้าต่างสำหรับลูกค้า 💙");
-        };
+            showToast("สลับเข้าสู่หน้าต่างสำหรับลูกค้า 💙");
+        }
 
-        window.switchAdminTab = function(tabName) {
+        function switchAdminTab(tabName) {
             const tabMembers = document.getElementById('tab-members');
             const tabRewards = document.getElementById('tab-rewards');
             const tabHistory = document.getElementById('tab-history');
@@ -1610,10 +1605,10 @@
                 tabHistory.classList.add('active');
                 secHistory.classList.add('active');
             }
-        };
+        }
 
-        // --- RENDERING FUNCTIONS (INTERNAL USE ONLY) ---
-        window.renderRewardsClient = function() {
+        // --- RENDERING FUNCTIONS ---
+        function renderRewardsClient() {
             const listContainer = document.getElementById('rewards-client-list');
             listContainer.innerHTML = '';
 
@@ -1634,9 +1629,9 @@
                     </div>
                 `;
             });
-        };
+        }
 
-        window.renderMembersAdmin = function() {
+        function renderMembersAdmin() {
             const tbody = document.getElementById('members-table-body');
             tbody.innerHTML = '';
 
@@ -1656,9 +1651,9 @@
                     </tr>
                 `;
             });
-        };
+        }
 
-        window.renderRewardsAdmin = function() {
+        function renderRewardsAdmin() {
             const listContainer = document.getElementById('rewards-admin-list');
             listContainer.innerHTML = '';
 
@@ -1685,9 +1680,9 @@
                     </div>
                 `;
             });
-        };
+        }
 
-        window.renderHistoryAdmin = function() {
+        function renderHistoryAdmin() {
             const tbody = document.getElementById('history-table-body');
             tbody.innerHTML = '';
 
@@ -1708,13 +1703,18 @@
                     </tr>
                 `;
             });
-        };
+        }
 
-        // สตาร์ทระบบทั้งหมดเมื่อโครงสร้าง DOM ทำงานเรียบร้อย
+        // ดักคีย์บอร์ดตอนกดส่งรหัสผ่านแอดมิน
         window.addEventListener('DOMContentLoaded', () => {
             initAppSystem();
+            
+            document.getElementById('admin-pin-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyAdminPIN();
+                }
+            });
         });
-
     </script>
 </body>
 </html>
