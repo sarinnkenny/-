@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowderPink - เว็บสะสมแต้มสุดน่ารัก</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS VARIABLES (โทนสีพาสเทลตามรูปภาพ) --- */
+        :root {
+            --bg-gradient: linear-gradient(180deg, #FFF0F5 0%, #FFE4E1 100%);
+            --primary-pink: #FFB6C1;
+            --dark-pink: #FF8DA1;
+            --soft-white: #FFFFFF;
+            --text-main: #6B4E54;
+            --text-muted: #A3858B;
+            --card-shadow: 0 8px 24px rgba(255, 182, 193, 0.2);
+            --border-radius: 24px;
+        }
+
+        /* --- GLOBAL STYLES --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0;
+        }
+
+        /* จำลองหน้าจอให้อยู่ตรงกลางสไตล์ Mobile-First ใน Desktop */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            min-height: 100vh;
+            box-shadow: 0 0 40px rgba(255, 141, 161, 0.1);
+            padding: 20px 20px 100px 20px; /* เว้นด้านล่างสำหรับปุ่มติดหน้าจอ */
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* หัวข้อเซกชันหลัก */
+        section-title {
+            font-family: 'Fredoka', 'Kanit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-pink);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* การตกแต่งการ์ดสไตล์พาสเทลโค้งมน */
+        .glass-card {
+            background: var(--soft-white);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* --- 1. HEADER SECTION --- */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 4px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 45px;
+            height: 45px;
+            background: var(--primary-pink);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(255, 182, 193, 0.4);
+        }
+
+        .brand-name {
+            font-family: 'Fredoka', 'Kanit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--dark-pink);
+            letter-spacing: 0.5px;
+        }
+
+        .dev-badge {
+            background: rgba(255, 182, 193, 0.25);
+            color: var(--dark-pink);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 182, 193, 0.4);
+        }
+
+        /* --- 2. HERO SECTION (สะสมแต้ม) --- */
+        .hero-card {
+            background: linear-gradient(135deg, #FFF5F6 0%, #FFE4E8 100%);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ตกแต่งพื้นหลังสไตล์ก้อนเมฆอ้อมๆ */
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+        }
+
+        .user-welcome {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .points-display {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 600;
+            color: var(--dark-pink);
+            line-height: 1;
+            margin: 10px 0;
+        }
+
+        .points-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            width: 100%;
+            background: var(--dark-pink);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 16px;
+            font-family: 'Kanit', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 6px 16px rgba(255, 141, 161, 0.3);
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 141, 161, 0.4);
+        }
+
+        /* --- 3. PRODUCTS SECTION --- */
+        .product-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .product-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            background: var(--soft-white);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 182, 193, 0.2);
+        }
+
+        .product-img-placeholder {
+            width: 70px;
+            height: 70px;
+            background: #FFEbee;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .product-points {
+            font-size: 0.85rem;
+            color: var(--dark-pink);
+            font-weight: 500;
+        }
+
+        .btn-exchange {
+            background: #FFF0F2;
+            color: var(--dark-pink);
+            border: 1px solid var(--primary-pink);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* --- 4. REVIEWS SECTION --- */
+        .review-slider {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .review-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-left: 4px solid var(--primary-pink);
+            padding: 12px 16px;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .reviewer-name {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .review-stars {
+            color: #FFB300;
+        }
+
+        .review-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* --- 5. DEVELOPER SECTION --- */
+        .dev-section {
+            text-align: center;
+            margin-top: 10px;
+            border: 2px dashed rgba(255, 182, 193, 0.4);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .dev-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .dev-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .dev-credit {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* --- 6. FLOATING CONTACT LINE BUTTON --- */
+        .line-contact-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 440px;
+            z-index: 100;
+        }
+
+        .btn-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #06C755; /* สีเขียว LINE แท้ */
+            color: white;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 18px;
+            font-weight: 500;
+            font-size: 1rem;
+            box-shadow: 0 8px 20px rgba(6, 199, 85, 0.25);
+            transition: all 0.2s;
+        }
+
+        .btn-line:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(6, 199, 85, 0.35);
+        }
+
+        .line-icon {
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            background: white;
+            color: #06C755;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-logo">P</div>
+                <div class="brand-name">PowderPink</div>
+            </div>
+            <div class="dev-badge">สมาชิกสะสมแต้ม</div>
+        </header>
+
+        <section class="glass-card hero-card">
+            <div class="user-welcome">ยินดีต้อนรับคุณ, ทาสการตลาดสุดน่ารัก 💕</div>
+            <div class="points-display">1,250</div>
+            <div class="points-label">คะแนนสะสมทั้งหมดของคุณ</div>
+            <a href="#exchange-section" class="btn-primary">ใช้คะแนนแลกของรางวัลคิวท์ๆ</a>
+        </section>
+
+        <section id="exchange-section" class="glass-card">
+            <div class="section-title">🎁 ของรางวัลสำหรับคุณ</div>
+            <div class="product-grid">
+                
+                <div class="product-item">
+                    <div class="product-img-placeholder">🌸</div>
+                    <div class="product-info">
+                        <div class="product-title">Griptok น้องก้อนเมฆพาสเทล</div>
+                        <div class="product-points">ใช้ 300 คะแนน</div>
+                    </div>
+                    <button class="btn-exchange">แลกเลย</button>
+                </div>
+
+                <div class="product-item">
+                    <div class="product-img-placeholder">🎀</div>
+                    <div class="product-info">
+                        <div class="product-title">พวงกุญแจโบว์ชมพู PowderPink</div>
+                        <div class="product-points">ใช้ 500 คะแนน</div>
+                    </div>
+                    <button class="btn-exchange">แลกเลย</button>
+                </div>
+
+                <div class="product-item">
+                    <div class="product-img-placeholder">🥤</div>
+                    <div class="product-info">
+                        <div class="product-title">แก้วเก็บความเย็นสีชมพูนม</div>
+                        <div class="product-points">ใช้ 1,200 คะแนน</div>
+                    </div>
+                    <button class="btn-exchange">แลกเลย</button>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="glass-card">
+            <div class="section-title">💖 รีวิวจากลูกค้าคนดี</div>
+            <div class="review-slider">
+                
+                <div class="review-card">
+                    <div class="review-header">
+                        <span class="reviewer-name">คุณ มิลค์กี้ ✨</span>
+                        <span class="review-stars">⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <div class="review-text">แอปสะสมแต้มน่ารักมากกก โทนสีชมพูดูแล้วสบายตาสุดๆ แลกของรางวัลไปสองรอบแล้ว ได้ไวมากค่ะ!</div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-header">
+                        <span class="reviewer-name">คุณ พาสเทลเลิฟเวอร์ 🦄</span>
+                        <span class="review-stars">⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <div class="review-text">ดีไซน์โค้งมนละมุนหัวใจ ใช้งานง่ายบนมือถือ เช็คแต้มสะดวกมาก ชอบความก้อนเมฆนี้ที่สุด</div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="glass-card dev-section">
+            <div class="dev-title">⚙️ Developer Corner</div>
+            <div class="dev-name">Ayino Moto</div>
+            <div class="dev-credit">Crafted with 🤍 for PowderPink Studio</div>
+        </section>
+
+        <div class="line-contact-container">
+            <a href="https://line.me" target="_blank" class="btn-line">
+                <span class="line-icon">LINE</span>
+                สอบถามข้อมูลเพิ่มเติมผ่าน LINE
+            </a>
+        </div>
+
+    </div>
+
+</body>
+</html>
